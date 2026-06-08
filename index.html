@@ -647,7 +647,7 @@ function Overview(){
             <span className="h">RDHx: rear-door air</span>
             The <b>150 W</b> DRAM / VRM / NIC peripherals stay air-cooled and are captured by a passive rear-door heat exchanger.
           </div>
-          <div className="callout">
+          <div className="callout g">
             <span className="h">Architecture trade study</span>
             The air vs. DLC-only vs. hybrid comparison that justifies the DLC&nbsp;+&nbsp;RDHx split above is evaluated next in section <b>§2 · Cooling Architecture Selection.</b>
           </div>
@@ -937,9 +937,15 @@ function GpuCfd(){
         </div>
       </div>
 
-      <div className="callout o reveal" style={{marginTop:18}}>
+      <div className="callout g reveal" style={{marginTop:18}}>
         <span className="h">CFD verdict</span>
         The GPU microchannel cold plate passes on all three axes: energy balance closes within 3%, ΔP comes in ~10% below the conservative laminar hand calc (12.0 vs 13.4&nbsp;kPa, 40% budget margin), and thermal resistance of 0.0281&nbsp;K/W stays under the 0.0387&nbsp;K/W budget. Because this plate governs flow, channel geometry, and loop ΔP, it is the narrowest in the design and the right place to watch on GPU-load operation.
+      </div>
+	  <div className="callout o reveal" style={{marginTop:18}}>
+        <span className="h">Assumptions & heat-source modeling</span>
+        The 700&nbsp;W GPU load is applied uniformly over the 40×50&nbsp;mm microchannel cold-plate footprint (35&nbsp;W/cm² averaged flux). This is a bounding case for coolant-side sizing, flow rate, plate ΔP, and CDU duty are set by total heat, so the 140&nbsp;LPM design point, 50&nbsp;kPa rack budget, and nVent HOFFMAN RackChiller CDU100 selection are unaffected by how the heat is distributed on the die side.Two refinements are deferred:
+        <p style={{marginTop:6}}>1) <b>Stepped die→IHS→base geometry.</b> The true stack is die → TIM1 → IHS → TIM2 → microchannel base (40×50&nbsp;mm). The current model under-predicts die hotspot temperature, and T<sub>j</sub> margin against the ~105&nbsp;°C limit must be re-evaluated once detailed geometry is available for a CFD simulation.</p>
+        <p style={{marginTop:6}}>2) <b>Power partitioning.</b> A realistic 700&nbsp;W package splits roughly 500–600&nbsp;W on the compute die and 100–200&nbsp;W across HBM and VRMs, each with its own T<sub>j</sub> limit. A multi-zone source map is the right next step. A future scope of this study is to replace the uniform patch with a stepped die source plus partitioned HBM/VRM zones in FloEFD / FloTherm / Icepak, once vendor power-map data is available for the die.</p>
       </div>
     </Sec>
   );
@@ -1286,8 +1292,7 @@ function CpuCfd(){
           </p>
         </div>
       </div>
-
-      <div className="callout o reveal" style={{marginTop:18}}>
+      <div className="callout g reveal" style={{marginTop:18}}>
         <span className="h">CFD verdict</span>
         Energy balance closes to within 0.5% and the resistance chain is confirmed: the base temperature profile (Fig.&nbsp;CP-3) peaks at 51.58&nbsp;°C, giving R<sub>cp</sub>&nbsp;=&nbsp;0.0415&nbsp;K/W, ~10% under the 0.0462&nbsp;K/W hand calc. ΔP comes in ~0.23&nbsp;kPa above the lumped-K hand estimate because CFD captures the port losses more accurately, but it remains roughly 93% below the 10&nbsp;kPa budget. The analytical CPU pin-fin plate is validated and conservative.
       </div>
