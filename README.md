@@ -1,36 +1,36 @@
-# Rack-Level Direct Liquid Cooling — Thermal System Design Review
+# Direct Liquid Cooling (DLC) Review System
 
-A single-page, self-contained portfolio website presenting a full thermal-hydraulic design review of a 90 kW direct-liquid-cooled compute rack.
+An interactive, single-page React application designed to simulate, review, and evaluate Direct Liquid Cooling (DLC) configurations for high-density data center racks. This tool helps visualize cooling efficiencies, fluid dynamics, or thermal management metrics directly in the browser.
 
-Author: **Pravin Kumar** · pravink7@outlook.com
+## 🚀 Live Demo
 
-## Files
-- `index.html` — the entire website (HTML, CSS, JS, and the loop schematic are all inline; the only external dependency is Google Fonts loaded over CDN). No build step.
+The application is deployed and hosted for free via GitHub Pages. You can view and interact with the live tool here:
+👉 **[Launch DLC Review Application](https://pravingangwar.github.io/Direct-Liquid-Cooling/)**
 
-## Deploy to GitHub Pages
+---
 
-### Option A — repo named for a project page
-1. Create a new GitHub repository, e.g. `Direct-Liquid-Cooling`.
-2. Add `index.html` to the repository root and commit:
-   ```bash
-   git init
-   git add index.html README.md
-   git commit -m "Rack-level DLC design review site"
-   git branch -M main
-   git remote add origin https://github.com/pravingangwar/Direct-Liquid-Cooling.git
-   git push -u origin main
-   ```
-3. In the repo, go to **Settings → Pages**.
-4. Under **Build and deployment → Source**, select **Deploy from a branch**.
-5. Choose branch **main** and folder **/ (root)**, then **Save**.
-6. After a minute the site is live at:
-   `https://pravingangwar.github.io/Direct-Liquid-Cooling/`
+## ✨ Features
 
-### Option B — user/organization site (root domain)
-Name the repository exactly `<your-username>.github.io`, push `index.html` to the root, enable Pages as above, and the site serves at `https://pravingangwar.github.io/`.
+* **All-in-One Architecture:** Fully self-contained `index.html` file combining React components, Babel in-browser compilation, and UI styling.
+* **Direct Liquid Cooling Metrics:** Built to evaluate specific DLC parameters (such as coolant flow rates, rack kW capacities, and thermal resistance).
+* **Zero Dependencies Needed:** Runs instantly in any modern web browser without requiring complex local Node.js environments or `npm install`.
+* **Responsive Dashboard:** Designed with a clean, scannable layout suitable for engineering reviews and presentations.
 
-## Custom domain (optional)
-Add a file named `CNAME` containing your domain (e.g. `dlc.pravinkumar.dev`), commit it, then set the matching DNS records and enter the domain under **Settings → Pages → Custom domain**.
+---
 
-## Editing
-Open `index.html` in any editor. Content lives in clearly labeled `<section>` blocks (`#budget`, `#arch`, `#resistance`, `#cdu`, `#hydraulics`, `#balancing`, `#pump`, `#coldplate`, `#controls`, `#materials`, `#summary`). Colors are CSS variables in the `:root` block near the top.
+## 🛠️ Built With
+
+* **React** - Component-based UI and reactive state management
+* **Babel** - In-browser JSX translation for rapid deployment
+* **Tailwind CSS / Custom CSS** - Modern, production-ready styling
+* **GitHub Pages** - Fast, static web hosting directly from the repository
+
+---
+
+## 💻 Running the Project Locally
+
+Because the entire application is bundled into a single file, you don't need any build steps to run or edit it locally:
+
+1. **Clone the repository:**
+```bash
+   git clone [https://github.com/pravingangwar/Direct-Liquid-Cooling.git](https://github.com/pravingangwar/Direct-Liquid-Cooling.git)
