@@ -1108,7 +1108,7 @@ function RackSim(){
       </div>
       <div className="callout o reveal" style={{marginTop:18}}>
         <span className="h">Recommendation: PICV on the CPU branch, not a fixed orifice</span>
-        Because the orifice head falls as Q² while the GPU plate falls only as Q¹·¹, the two branch curves <b>cross near 0.39 LPM (~3.3 kPa)</b>. Above it the split is correct; below it the orifice can no longer hold its share and the CPU branch runs progressively rich while the GPU starves. The CPU+orifice branch follows ΔP ≈ 21.9·Q² versus the GPU plate's ΔP ≈ 9.4·Q¹·¹, and across the reverse-return header the node ΔP itself spans 16.9–23.3 kPa, so a single fixed orifice can only balance the split at one operating point. A <b>Pressure-Independent Control Valve (PICV)</b> on the CPU branch holds the set flow regardless of ΔP and removes this part-load drift entirely.
+        Because the orifice ΔP ∝ Q² while the GPU plate ΔP ∝ Q¹·¹, the two branch curves <b>cross near 0.39 LPM (~3.3 kPa)</b>. Above it the split is correct; below it the orifice can no longer hold its share and the CPU branch runs progressively rich while the GPU starves. Therefore, a single fixed orifice can only balance the split at one operating point. A <b>Pressure-Independent Control Valve (PICV)</b> on the CPU branch holds the set flow regardless of ΔP and removes this part-load drift entirely.
       </div>
     </Sec>
   );
