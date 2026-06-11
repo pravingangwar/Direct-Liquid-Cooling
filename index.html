@@ -691,7 +691,7 @@ function Architecture(){
       </div>
       <div className="callout g reveal" style={{marginTop:18}}>
         <span className="h">Decision</span>
-        Hybrid <b>DLC + RDHx</b> delivers the full 90 kW at <b>PUE&nbsp;&lt;&nbsp;1.05</b> versus 1.30–1.50 for air. Cold plates capture the
+        Hybrid <b>DLC + RDHx</b> delivers the full 90 kW at <b>PUE&nbsp;&lt;&nbsp;1.1</b> versus 1.30–1.50 for air. Cold plates capture the
         3,600 W CPU + GPU load directly; a passive rear-door HX captures the 150 W peripheral air load, enabling near-total heat capture.
       </div>
     </Sec>
@@ -943,7 +943,7 @@ function GpuCfd(){
       </div>
 	  <div className="callout o reveal" style={{marginTop:18}}>
         <span className="h">Assumptions & heat-source modeling</span>
-        The 700&nbsp;W GPU load is applied uniformly over the 40×50&nbsp;mm microchannel cold-plate footprint (35&nbsp;W/cm² averaged flux). This is a bounding case for coolant-side sizing: flow rate, plate ΔP, and CDU duty are set by total heat, so the 140&nbsp;LPM design point, 50&nbsp;kPa rack budget, and nVent HOFFMAN RackChiller CDU100 selection are unaffected by how the heat is distributed on the die side. Two refinements are deferred:
+        The 700&nbsp;W GPU load is applied uniformly over the 40×50&nbsp;mm microchannel cold-plate footprint (35&nbsp;W/cm² averaged flux). This is a bounding case for coolant-side sizing: flow rate, plate ΔP, and CDU duty are set by total heat, so the 140&nbsp;LPM design point, 50&nbsp;kPa rack budget, and Vertiv CoolChip CDU100kW selection are unaffected by how the heat is distributed on the die side. Two refinements are deferred:
         <p style={{marginTop:6}}>1) <b>Die→IHS→Cold plate base.</b> The true stack is Die → TIM1 → IHS → TIM2 → Microchannel base (40×50&nbsp;mm). The current model under-predicts die hotspot temperature, and T<sub>j</sub> margin against the vendor limit must be re-evaluated once detailed geometry or powermap distribution is available for a CFD simulation.</p>
         <p style={{marginTop:6}}>2) <b>Power partitioning.</b> A realistic 700&nbsp;W package splits roughly 500–600&nbsp;W on the compute die and 100–200&nbsp;W across HBM and VRMs, each with its own T<sub>j</sub> limit. A multi-zone heat source map is the right next step. A future scope of this study is to replace the uniform flat base of the cold plate with a stepped profile to match compute die, HBM, and VRM zones in FloEFD / FloTherm / Icepak.</p>
       </div>
@@ -1195,7 +1195,7 @@ function ColdPlates(){
           <div style={{display:'flex',gap:18,alignItems:'flex-end',flexWrap:'wrap'}}>
             <Therm tj={84.1} limit={95} margin={10.9} o/>
             <div style={{flex:1,minWidth:140}}>
-              <div className="ministat o" style={{marginBottom:8}}><div className="v">26.9%</div><div className="k">margin vs 0.0387 budget</div></div>
+              <div className="ministat o" style={{marginBottom:8}}><div className="v">40.3%</div><div className="k">margin vs 0.0387 budget</div></div>
               <div className="ministat o"><div className="v">13.4 kPa</div><div className="k">plate ΔP · vs 20 kPa</div></div>
             </div>
           </div>
@@ -1301,16 +1301,108 @@ function CpuCfd(){
 }
 
 /* ---------- 11. CDU SIZING ---------- */
+function PumpChart(){
+  // Vertiv CoolChip CDU 100 — digitized 100% speed pump curve (single unit)
+  const curve100 = [
+    [0,198.75],[10.05,195.70],[19.74,191.72],[29.88,185.39],[40.12,177.19],
+    [49.81,169.22],[59.86,159.84],[69.91,147.42],[79.69,134.77],[89.92,120.00],
+    [99.79,104.53],[109.94,86.25],[119.62,68.44],[129.86,48.52],[134.93,37.50]
+  ];
+  // 2 CDUs in parallel @ 100%: at rack flow Q, each handles Q/2 at the same ΔP
+  const curve2x100 = curve100.map(([q,p])=>[q*2, p]);
+  // 2 CDUs in parallel @ 65%: affinity scaling — Q_rack = 2·n·Q_100, ΔP = n²·P_100
+  const n = 0.65, n2 = n*n;
+  const curve2x65 = curve100.map(([q,p])=>[q*2*n, p*n2]);
+  // System impedance: ΔP = k·Q² through (140, 37.7)
+  const k = 37.7/(140*140);
+  const sysCurve = [];
+  for(let q=0; q<=180; q+=4) sysCurve.push([q, k*q*q]);
+
+  // Geometry
+  const W=720, H=360, M={l:58,r:148,t:18,b:46};
+  const xMax=180, yMax=210;
+  const px = q => M.l + (q/xMax)*(W-M.l-M.r);
+  const py = p => H-M.b - (p/yMax)*(H-M.t-M.b);
+  const path = pts => pts.filter(([q,p])=>q<=xMax && p<=yMax && p>=0)
+                         .map(([q,p],i)=>`${i?'L':'M'}${px(q).toFixed(1)},${py(p).toFixed(1)}`).join(' ');
+
+  const axisColor = 'rgba(0,0,0,0.55)';
+  const gridColor = 'rgba(0,0,0,0.08)';
+  const textColor = 'rgba(0,0,0,0.75)';
+  const labelColor = 'rgba(0,0,0,0.85)';
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{width:'100%',height:'auto',display:'block'}}>
+      {/* grid */}
+      <g stroke={gridColor} strokeWidth="1">
+        {[30,60,90,120,150,180].map(x=>(
+          <line key={'gx'+x} x1={px(x)} y1={py(0)} x2={px(x)} y2={py(yMax)}/>
+        ))}
+        {[50,100,150,200].map(y=>(
+          <line key={'gy'+y} x1={px(0)} y1={py(y)} x2={px(xMax)} y2={py(y)}/>
+        ))}
+      </g>
+      {/* axes */}
+      <line x1={px(0)} y1={py(0)} x2={px(xMax)} y2={py(0)} stroke={axisColor} strokeWidth="1.2"/>
+      <line x1={px(0)} y1={py(0)} x2={px(0)} y2={py(yMax)} stroke={axisColor} strokeWidth="1.2"/>
+      {/* x ticks */}
+      {[0,30,60,90,120,150,180].map(x=>(
+        <text key={'tx'+x} x={px(x)} y={py(0)+16} fontSize="10.5" fill={textColor} textAnchor="middle">{x}</text>
+      ))}
+      {/* y ticks */}
+      {[0,50,100,150,200].map(y=>(
+        <text key={'ty'+y} x={px(0)-8} y={py(y)+3.5} fontSize="10.5" fill={textColor} textAnchor="end">{y}</text>
+      ))}
+      {/* axis labels */}
+      <text x={(px(0)+px(xMax))/2} y={H-10} fontSize="11.5" fill={textColor} textAnchor="middle" fontWeight="600">Rack flow Q (LPM)</text>
+      <text fontSize="11.5" fill={textColor} textAnchor="middle" fontWeight="600"
+            transform={`translate(16,${(py(0)+py(yMax))/2}) rotate(-90)`}>ΔP (kPa)</text>
+
+      {/* Curves (drawn back-to-front: faint to prominent) */}
+      <path d={path(curve2x100)} fill="none" stroke="var(--cyan)" strokeWidth="2" strokeDasharray="7 4" opacity="0.5"/>
+      <path d={path(curve2x65)}  fill="none" stroke="var(--cyan)" strokeWidth="2" strokeDasharray="2 4" opacity="0.85"/>
+      <path d={path(curve100)}   fill="none" stroke="var(--cyan)" strokeWidth="2.6"/>
+      <path d={path(sysCurve)}   fill="none" stroke="var(--orange)" strokeWidth="2.6"/>
+
+      {/* Inline curve labels */}
+      <text x={px(135)} y={py(168)} fontSize="11.5" fill={labelColor} fontWeight="700" textAnchor="middle">2 × CDU @ 100%</text>
+      <text x={px(92)}  y={py(122)} fontSize="11.5" fill={labelColor} fontWeight="700" textAnchor="middle">1× CDU @ 100%</text>
+      <text x={px(62)}  y={py(63)}  fontSize="11"   fill={labelColor} fontWeight="600" textAnchor="middle">2× CDU @ 65%</text>
+      <text x={px(70)}  y={py(16)}  fontSize="11"   fill={labelColor} fontWeight="600" textAnchor="middle">System curve</text>
+
+      {/* Markers */}
+      <circle cx={px(140)}   cy={py(37.7)} r="6"   fill="var(--orange)" stroke="white" strokeWidth="2"/>
+      <circle cx={px(135.9)} cy={py(35.5)} r="6"   fill="var(--cyan)"   stroke="white" strokeWidth="2"/>
+
+      {/* Legend */}
+      <g transform={`translate(${W-M.r+10},${M.t+6})`}>
+        <line x1="0" y1="6"  x2="24" y2="6"  stroke="var(--cyan)" strokeWidth="2.6"/>
+        <text x="30" y="10" fontSize="10.5" fill={textColor}>1× CDU @ 100%</text>
+        <line x1="0" y1="26" x2="24" y2="26" stroke="var(--cyan)" strokeWidth="2" strokeDasharray="2 4" opacity="0.85"/>
+        <text x="30" y="30" fontSize="10.5" fill={textColor}>2× CDU @ 65%</text>
+        <line x1="0" y1="46" x2="24" y2="46" stroke="var(--cyan)" strokeWidth="2" strokeDasharray="7 4" opacity="0.5"/>
+        <text x="30" y="50" fontSize="10.5" fill={textColor}>2× CDU @ 100%</text>
+        <line x1="0" y1="66" x2="24" y2="66" stroke="var(--orange)" strokeWidth="2.6"/>
+        <text x="30" y="70" fontSize="10.5" fill={textColor}>System curve</text>
+        <circle cx="12" cy="88"  r="5.5" fill="var(--orange)" stroke="white" strokeWidth="1.5"/>
+        <text x="30" y="92" fontSize="10.5" fill={textColor}>Operating point, 2 CDU</text>
+        <circle cx="12" cy="108" r="5.5" fill="var(--cyan)" stroke="white" strokeWidth="1.5"/>
+        <text x="30" y="112" fontSize="10.5" fill={textColor}>operating point, 1 CDU</text>
+      </g>
+    </svg>
+  );
+}
+
 function Pump(){
   const wf=[
-    {n:'GPU microchannel cold plate (governing branch)',v:15,c:'var(--orange)'},
+    {n:'GPU microchannel cold plate (governing branch)',v:20,c:'var(--orange)'},
     {n:'Manifold + control valves + branch hoses',v:20,c:'var(--cyan)'},
     {n:'Quick-disconnects (GPL50 + UQD06, supply+return)',v:10,c:'var(--cyan)'},
   ];
   const max=Math.max(...wf.map(x=>x.v));
   return (
-    <Sec id="pump" n="11" title="CDU Hydraulic Sizing: Pump, Affinity & N+1"
-      sub="The rack-external governing-branch impedance sets the CDU duty, affinity laws give the VSD turndown map, and an N+1 standby pump covers single-fault operation. CDU-internal losses are handled by the unit's integral pump and are not part of the rack-side budget.">
+    <Sec id="pump" n="11" title="CDU Hydraulic Sizing: Pump Curve, Affinity & 2N Redundancy"
+      sub="The rack-external governing-branch impedance sets the CDU duty, affinity laws give the VSD turndown map, and 2x Vertiv CoolChip CDU 100 in parallel under group control deliver CDU-level 2N redundancy with internal pump N+1. CDU-internal losses are absorbed by each unit's dual integral pumps and are not part of the rack-side budget.">
       <div className="grid2">
         <div className="card reveal">
           <h3 style={{marginBottom:6}}><span className="dot"></span>Rack-external impedance budget @ 140 LPM</h3>
@@ -1325,31 +1417,39 @@ function Pump(){
           </div>
         </div>
         <div className="card reveal">
-          <h3 style={{marginBottom:12}}><span className="dot"></span>Affinity laws · VSD turndown · N+1</h3>
+          <h3 style={{marginBottom:12}}><span className="dot"></span>Affinity laws · VSD turndown · 2N</h3>
           <div className="eq" style={{marginBottom:14}}>Q ∝ N · ΔP ∝ N² · P ∝ N³</div>
           <table>
-            <thead><tr><th>Condition</th><th className="num">Flow</th><th className="num">Speed</th><th className="num">Head</th></tr></thead>
+            <thead><tr><th>Condition</th><th className="num">Rack flow</th><th className="num">Speed</th><th className="num">Head</th></tr></thead>
             <tbody style={{fontSize:12.5}}>
-              <tr><td>Design point </td><td className="num">140 LPM</td><td className="num">100%</td><td className="num">50 kPa</td></tr>
-              <tr className="rowsel"><td>Operating point</td><td className="num">140 LPM</td><td className="num">75%</td><td className="num">37.7 kPa</td></tr>
-              <tr><td>Q min (CPU busy · GPU idle)</td><td className="num">42 LPM</td><td className="num">30%</td><td className="num">3.4 kPa</td></tr>
-              <tr><td>Single-pump fault (N+1)</td><td className="num">140 LPM</td><td className="num">100%</td><td className="num">37.7 kPa</td></tr>
+              <tr className="rowsel"><td>Operating point (2x CDU)</td><td className="num">140 LPM</td><td className="num">~65%</td><td className="num">37.7 kPa</td></tr>
+              <tr><td>Q min (CPU busy · GPU idle)</td><td className="num">42 LPM</td><td className="num">~20%</td><td className="num">3.4 kPa</td></tr>
+              <tr><td>1x CDU active (2N fallback)</td><td className="num">~136 LPM</td><td className="num">100%</td><td className="num">~35 kPa</td></tr>
             </tbody>
           </table>
-			<div className="callout" style={{marginTop:14}}>
-            Conservative subtotal <b>50 kPa</b>. CFD and the full-rack Simulink network return <b>37.7 kPa</b> at 140 LPM, <b>~100%</b> of budget, confirming the estimate with ~25% headroom.
-			</div>
+          <div className="callout" style={{marginTop:14}}>
+            Conservative budget <b>50 kPa</b>. CFD and the full-rack Simulink network return <b>37.7 kPa</b> at 140 LPM, giving <b>~25% margin</b>. Speeds solved from the digitized Vertiv pump curve via affinity laws → <b>n ≈ 0.65</b> at the operating point. Each CDU uses only ~26% of single-unit pump head capability.
+          </div>
         </div>
       </div>
+
+      <div className="card reveal" style={{marginTop:16}}>
+        <h3 style={{marginBottom:8}}><span className="dot"></span>Pump curve vs system impedance (digitized from Vertiv Fig 4.5)</h3>
+        <PumpChart/>
+        <p className="cap" style={{marginTop:10}}>
+          The <b>2× CDU @ 65%</b> curve (dotted) intersects the system impedance curve at the operating point <b>(140 LPM, 37.7 kPa)</b>, that's how the VSD speed setpoint is derived. The <b>2× CDU @ 100%</b> envelope (dashed) sits well above, leaving deep turndown room. A single CDU at 100% intersects the system curve at <b>~136 LPM / 35.5 kPa</b> i.e. a lone unit cannot quite hold the 140 LPM design flow (~3% hydraulic shortfall) but easily covers the 90 kW thermal load alone, which is why this architecture qualifies as <b>2N</b> at the CDU level.
+        </p>
+      </div>
+
       <div className="grid4" style={{marginTop:16}}>
-        <div className="ministat reveal"><div className="v">50 kPa</div><div className="k">140 LPM</div><div className="s">100% N · system curve</div></div>
-        <div className="ministat reveal"><div className="v">160 W</div><div className="k">Electrical (Efficieincy ~70%)</div><div className="s">88 W hydraulic @ operating</div></div>
-        <div className="ministat o reveal"><div className="v">75%</div><div className="k">VSD speed @ operating point</div><div className="s"> 37.7 kPa</div></div>
-        <div className="ministat g reveal"><div className="v">N+1</div><div className="k">Pump redundancy</div><div className="s">&lt; 3 s switchover</div></div>
+        <div className="ministat reveal"><div className="v">50 kPa</div><div className="k">140 LPM</div><div className="s">rack-external budget · system curve</div></div>
+        <div className="ministat reveal"><div className="v">88 W</div><div className="k">Rack-side hydraulic</div><div className="s">~0.6 kW total CDU electrical @ OP (1.4 kW max)</div></div>
+        <div className="ministat o reveal"><div className="v">~65%</div><div className="k">VSD speed per CDU @ OP</div><div className="s">70 LPM, 37.7 kPa per unit</div></div>
+        <div className="ministat g reveal"><div className="v">2N</div><div className="k">CDU-level redundancy</div><div className="s">2x CDU 100, each 100 kW vs 90 kW load · internal pump N+1</div></div>
       </div>
       <div className="callout reveal" style={{marginTop:18}}>
-        <span className="h">Sizing basis &amp; operating reality</span>
-        The CDU secondary side is sized at a <b>140 LPM / 50 kPa</b> design point (100% speed). At that operating point the validated loop draws only <b>~37.7 kPa</b> (88 W hydraulic). A representative in-rack unit such as the <b>nVent HOFFMAN RackChiller CDU100</b> covers this duty within its published 10–18 psi operating-pressure envelope and absorbs its own HX, filter, and internal-piping losses on its integral pump, so no CDU-internal term loads the rack-side budget.
+		  <span className="h">Sizing basis &amp; operating reality</span>
+		  Selected unit: <b>Vertiv CoolChip CDU 100</b> (XDU100WA, 100 kW, 4U, dual mag-lev VFD pumps with internal N+1, 4 bar PRV, 50-micron secondary filter, sanitary flange connections; Vertiv SL-71339). Deployed as <b>2× CDU 100 in parallel under group control</b>: each unit alone covers the 90 kW thermal load (100 kW rated), giving <b>CDU-level 2N</b> on top of each unit's internal pump N+1, 4 pumps and 2 CDUs serving a 90 kW / 140 LPM load. Total rack stack impact 8U (2 × 4U).
       </div>
     </Sec>
   );
@@ -1387,7 +1487,7 @@ function Controls(){
         <div className="card reveal">
           <h3 style={{marginBottom:12}}><span className="dot"></span>PID cascade: temperature regulation</h3>
           <div className="cascade">
-            <div className="cas"><span className="tier">OUTER</span><div className="body"><div className="n">V-201 facility water</div><div className="p">PV Tsupply · SP 40 °C · Kc −0.833 · Ti 51s · Td 6s</div></div></div>
+            <div className="cas"><span className="tier">OUTER</span><div className="body"><div className="n">V-201 facility water</div><div className="p">PV Tsupply · SP 35 °C · Kc −0.833 · Ti 51s · Td 6s</div></div></div>
             <div className="cas-arrow">↓</div>
             <div className="cas"><span className="tier">INNER</span><div className="body"><div className="n">V-101 3-way bypass (fast)</div><div className="p">PV Tsupply · SP cascade · Kc 1.0 · Ti 12s</div></div></div>
             <div className="cas-arrow">↓</div>
@@ -1474,7 +1574,7 @@ function Summary(){
   ];
   return (
     <Sec id="summary" n="14" title="Design Summary & Validation"
-      sub="Junction temperature, presure losses, and system impedance are verified using CFD and MATLAB/Simulnk models.">
+      sub="Junction temperature, pressure losses, and system impedance are verified using CFD and MATLAB/Simulink models.">
       <div className="grid4">
         {cards.map((c,i)=>(
           <div key={i} className={'hstat reveal'+(c.o?' o':'')}>
