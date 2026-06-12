@@ -1561,12 +1561,12 @@ function Materials(){
               {maint.map((r,i)=>(<tr key={i}><td>{r[0]}</td><td className="mono">{r[1]}</td><td style={{color:'var(--muted)'}}>{r[2]}</td></tr>))}
             </tbody>
           </table>
-          <div className="callout" style={{marginTop:14}}>
-            <span className="h">Side-stream conditioning</span>
-            A 5% side-stream loop carries the bag filter and a make-up / dosing port, holding conductivity and inhibitor in band without interrupting the primary 140 LPM circuit. Note that a 50 µm filter is coarse relative to the 300 µm GPU microchannels; the filter should be tightened to <b>≤ 25–30 µm</b> to guard against partial channel blockage by particulate that a 50 µm element would pass.
-          </div>
         </div>
       </div>
+		<div className="callout" style={{marginTop:14}}>
+            <span className="h">Side-stream conditioning</span>
+            A 5% side-stream loop carries the bag filter and a make-up / dosing port, holding conductivity and inhibitor in band without interrupting the primary 140 LPM circuit. Note that a 50 µm filter is coarse relative to the 300 µm GPU microchannels; the filter should be tightened to <b>≤ 25–30 µm</b> to guard against partial channel blockage by particulate that a 50 µm element would pass.
+		</div>
     </Sec>
   );
 }
