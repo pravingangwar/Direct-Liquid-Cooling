@@ -555,7 +555,7 @@ function Hero(){
 		  <span className="flag">CDU thermal sizing</span>
           <span className="flag">Rack network simulation (Simulink)</span>
           <span className="flag">CDU hydraulic sizing</span>
-          <span className="flag">Flow balancing (orifice/PICV)</span>
+          <span className="flag">Flow balancing (orifice)</span>
           <span className="flag">Valve sizing &amp; controls</span>
 		  <span className="flag">Galvanic matrix</span>
 
@@ -572,8 +572,8 @@ function Hero(){
         <div className="herostats">
           <div className="hstat reveal"><div className="v mono">90 kW</div><div className="k">Rack Design Load</div><div className="s">75 kW, Nominal + 20% margin</div></div>
           <div className="hstat reveal"><div className="v mono">140 LPM</div><div className="k">EGW-30 @ 35 °C</div><div className="s">~1.55 LPM/kW design basis</div></div>
-          <div className="hstat o reveal"><div className="v mono">78.3 °C</div><div className="k">CPU Junction </div><div className="s">16.7 °C margin to limit</div></div>
-          <div className="hstat o reveal"><div className="v mono">84.1 °C</div><div className="k">GPU Junction (governing)</div><div className="s">10.9 °C margin to limit</div></div>
+          <div className="hstat o reveal"><div className="v mono">76.4 °C</div><div className="k">CPU Junction </div><div className="s">18.6 °C margin (CFD)</div></div>
+          <div className="hstat o reveal"><div className="v mono">87.6 °C</div><div className="k">GPU Junction (governing)</div><div className="s">7.4 °C margin (CFD, uniform-flux)</div></div>
         </div>
 
         <Schematic/>
@@ -951,6 +951,7 @@ function GpuCfd(){
         The 700&nbsp;W GPU load is applied uniformly over the 40×50&nbsp;mm microchannel cold-plate footprint (35&nbsp;W/cm² averaged flux). This is a bounding case for coolant-side sizing: flow rate, plate ΔP, and CDU duty are set by total heat, so the 140&nbsp;LPM design point, 50&nbsp;kPa rack budget, and Vertiv CoolChip CDU100kW selection are unaffected by how the heat is distributed on the die side. Two refinements are deferred:
         <p style={{marginTop:6}}>1) <b>Die→IHS→Cold plate base.</b> The true stack is Die → TIM1 → IHS → TIM2 → Microchannel base (40×50&nbsp;mm). The current model under-predicts die hotspot temperature, and T<sub>j</sub> margin against the vendor limit must be re-evaluated once detailed geometry or powermap distribution is available for a CFD simulation.</p>
         <p style={{marginTop:6}}>2) <b>Power partitioning.</b> A realistic 700&nbsp;W package splits roughly 500–600&nbsp;W on the compute die and 100–200&nbsp;W across HBM and VRMs, each with its own T<sub>j</sub> limit. A multi-zone heat source map is the right next step. A future scope of this study is to replace the uniform flat base of the cold plate with a stepped profile to match compute die, HBM, and VRM zones in FloEFD / FloTherm / Icepak.</p>
+        <p style={{marginTop:6}}>3) <b>Loss-of-flow / pump-trip transient (future scope).</b> A lumped-capacitance ride-through analysis of a hard loss-of-flow event, single GPU cold plate as the worst-case local failure is identified as future scope, together with the resulting flow/ΔP-triggered interlock requirement (power-cap command on flow loss, with pump-trip as the slower backstop).</p>
       </div>
     </Sec>
   );
@@ -1107,7 +1108,7 @@ function RackSim(){
         A lumped header estimate predicts a near-uniform &le;2% node-to-node spread on the supply/return rails alone. The full network model resolves <b>~16%</b> once the cumulative reverse-return path asymmetry plus the per-node UQD06/GPL50 quick-disconnect and riser losses are stacked. All twenty nodes still hold per-plate flow above the minimum that keeps GPU and CPU junctions in budget, but the spread is real and worth carrying into the as-built balancing plan.
       </div>
       <div className="card reveal" style={{marginTop:18}}>
-        <h3 style={{marginBottom:6}}><span className="dot o"></span>CFD P–Q curves: why the orifice needs a PICV</h3>
+        <h3 style={{marginBottom:6}}><span className="dot o"></span>CFD P–Q curves of cold-plates and orifice</h3>
         <p className="cap" style={{marginBottom:6}}>Predicted cold-plate head from CFD. The 2&nbsp;mm orifice (ΔP&nbsp;∝&nbsp;Q²) is sized so the CPU branch matches the laminar GPU plate (ΔP&nbsp;∝&nbsp;Q¹·¹) <b>only at the design split</b>. The exponent mismatch is the whole problem.</p>
         <p className="cap" style={{marginBottom:6,fontSize:11.5,opacity:.85}}>Note: all four CFD P–Q data points were generated as <b>isothermal cold-flow</b> (constant fluid properties, no heat input), so they capture hydraulic head only. The resulting <b>13.27&nbsp;kPa</b> GPU branch head at 1.36&nbsp;LPM is therefore slightly above the <b>≈12&nbsp;kPa</b> reported by the conjugate (heated) CFD in the Cold Plates section, where the warmer, less-viscous fluid lowers the plate head. The cold-flow value is the conservative basis used for orifice sizing and the Simscape network.</p>
         <PQChart/>
@@ -1118,8 +1119,14 @@ function RackSim(){
         </div>
       </div>
       <div className="callout o reveal" style={{marginTop:18}}>
-        <span className="h">Recommendation: PICV on the CPU branch, not a fixed orifice</span>
-        Because the orifice ΔP ∝ Q² while the GPU plate ΔP ∝ Q¹·¹, the two branch curves <b>cross near 0.39 LPM (~3.3 kPa)</b>. Above it the split is correct; below it the orifice can no longer hold its share and the CPU branch runs progressively rich while the GPU starves. Therefore, a single fixed orifice can only balance the split at one operating point. A <b>Pressure-Independent Control Valve (PICV)</b> on the CPU branch holds the set flow regardless of ΔP and removes this part-load drift entirely.
+        <span className="h">Limitations of fixed orifice</span>
+        The exponent mismatch: the orifice scales ΔP ∝ Q² while the GPU microchannel plate scales ΔP ∝ Q¹·¹, so the two branch curves match only at the design split (they <b>cross near 0.39 LPM, ~3.3 kPa</b>). Whether that mismatch matters depends entirely on how the CDU runs the secondary loop:
+        <ul style={{margin:'10px 0 10px 18px',padding:0}}>
+          <li><b>Constant volumetric flow</b> (common in hyperscale AI loops: pump parasitic power is &lt;1% of IT load, so there is little incentive to throttle): the orifice sits permanently at its design point and the split never drifts. A fixed orifice is fully adequate.</li>
+          <li><b>Constant manifold ΔP</b> (VFD pump modulated to hold supply–return Δp): node ΔP is held rigid, so the parallel CPU/GPU split stays locked at design regardless of total flow. A fixed orifice is again adequate.</li>
+          <li><b>ΔT-following / variable-ΔP turndown</b>: As ΔP falls with load, the quadratic orifice loses restriction faster than the linear plate, and the CPU branch runs rich while the GPU is starved of its proportional share. But this drift is self-limiting, flow falls because heat fell, so the GPU is starved precisely when it has minimal load to dissipate and ample thermal margin remains. The orifice is sized for the peak-load case, not idle.</li>
+        </ul>
+        <b>Conclusion:</b> a fixed orifice sized at full thermal load is acceptable under constant-flow or constant-ΔP control.
       </div>
     </Sec>
   );
@@ -1523,7 +1530,7 @@ function Materials(){
   ];
   const label={ok:'OK',no:'NO',self:'—'};
   const maint=[['Conductivity','< 20 µS/cm','Monthly'],['pH','7.5–8.5','Monthly'],['Glycol concentration','28–32% vol','Quarterly'],
-    ['Corrosion inhibitor','3–5% active','Quarterly'],['Particulate (filter)','50 µm bag','ΔP-driven'],['Biological / TVC','< 10³ CFU/mL','Semi-annual'],['Full fluid change','inhibitor depletion','≈ 5 yr']];
+    ['Corrosion inhibitor','3–5% active','Quarterly'],['Particulate (filter)','≤ 25–30 µm bag (50 µm too coarse for 300 µm channels)','ΔP-driven'],['Biological / TVC','< 10³ CFU/mL','Semi-annual'],['Full fluid change','inhibitor depletion','≈ 5 yr']];
   return (
     <Sec id="materials" n="13" title="Material Compatibility & Fluid Maintenance"
       sub="A galvanic compatibility matrix sets one hard rule; no aluminium in the wetted loop.">
@@ -1556,7 +1563,7 @@ function Materials(){
           </table>
           <div className="callout" style={{marginTop:14}}>
             <span className="h">Side-stream conditioning</span>
-            A 5% side-stream loop carries the 50 µm bag filter and a make-up / dosing port, holding conductivity and inhibitor in band without interrupting the primary 140 LPM circuit.
+            A 5% side-stream loop carries the bag filter and a make-up / dosing port, holding conductivity and inhibitor in band without interrupting the primary 140 LPM circuit. Note that a 50 µm filter is coarse relative to the 300 µm GPU microchannels; the filter should be tightened to <b>≤ 25–30 µm</b> to guard against partial channel blockage by particulate that a 50 µm element would pass.
           </div>
         </div>
       </div>
@@ -1568,13 +1575,13 @@ function Materials(){
 function Summary(){
   const cards=[
     {v:'0.0462',k:'CPU Cold Plate, Rth (K/W)',s:'vs 0.088 budget',o:false},
-    {v:'78.3 °C',k:'CPU Junction, T',s:'16.7 K margin',o:false},
+    {v:'76.4 °C',k:'CPU Junction, T',s:'18.6 K margin (CFD)',o:false},
     {v:'0.0231',k:'GPU Cold Plate, Rth (K/W)',s:'vs 0.0387 budget',o:true},
-    {v:'84.1 °C',k:'GPU Junction, T',s:'10.9 K margin',o:true},
+    {v:'87.6 °C',k:'GPU Junction, T',s:'7.4 K margin (CFD, uniform-flux)',o:true},
     {v:'≥90 kW',k:'CDU capacity',s:'~8% over design',o:false},
     {v:'37.7 kPa',k:'System Impedance',s:'@ 140 LPM',o:false},
 	{v:'13.4 kPa',k:'GPU plate ΔP (governs)',s:'vs 20 kPa budget',o:true},
-    {v:'Imbalance',k:'CPU 0.44 kPa vs GPU 12.7 kPa',s:'fixed orifice or PICV',o:true},
+    {v:'Imbalance',k:'CPU 0.44 kPa vs GPU 12.7 kPa',s:'orifice needed for flow balance',o:true},
 
   ];
   return (
