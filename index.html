@@ -394,7 +394,7 @@ const Drop = ({size=26,color="var(--cyan)"}) => (
 const SECTIONS = [
   {id:'overview', t:'Overview'},
   {id:'architecture', t:'Architecture'},
-  {id:'resistance', t:'Rθ Budget'},
+  {id:'resistance', t:'Rth Budget'},
   {id:'coolant', t:'Coolant'},
   {id:'flow', t:'Energy Balance'},
   {id:'coldplates', t:'Cold Plates'},
@@ -638,18 +638,14 @@ function Overview(){
 
         <div className="card reveal">
           <h3><span className="dot o"></span>Hybrid cooling scope</h3>
-          <p className="cap">Cold plates capture the high-flux silicon; a passive rear-door HX mops up the low-grade peripheral air load, together reaching 100% heat capture.</p>
+          <p className="cap">Cold plates capture the high-flux silicon via the top (IHS) path; a passive rear-door HX mops up the peripheral air load <i>plus</i> the CPU/GPU heat that leaks through the package into the board, together reaching 100% heat capture.</p>
           <div className="callout" style={{marginBottom:12}}>
-            <span className="h">DLC: cold plates</span>
-            Direct-contact plates handle <b>3,600 W per node</b> (CPU + GPU), the load that cannot be air-cooled at this density.
+            <span className="h">DLC: cold plates (top path)</span>
+            Direct-contact plates carry 90–95% of the <b>3,600 W per node</b> (CPU + GPU) through the junction→IHS→plate path; this load cannot be air-cooled at this density.
           </div>
           <div className="callout o" style={{marginBottom:12}}>
             <span className="h">RDHx: rear-door air</span>
-            The <b>150 W</b> DRAM / VRM / NIC peripherals stay air-cooled and are captured by a passive rear-door heat exchanger.
-          </div>
-          <div className="callout g">
-            <span className="h">Architecture trade study</span>
-            The air vs. DLC-only vs. hybrid comparison that justifies the DLC&nbsp;+&nbsp;RDHx split above is evaluated next in section <b>§2 · Cooling Architecture Selection.</b>
+            The RDHx removes <b>150 W</b> DRAM / VRM / NIC peripheral heat, <i>plus</i> the CPU/GPU to board-leakage ~5–10% (180–360 W), totaling <b>~330–510 W per node</b> (6.6–10.2 kW/rack) on the air side.
           </div>
         </div>
       </div>
@@ -660,6 +656,11 @@ function Overview(){
         <div className="ministat reveal"><div className="v">140 LPM</div><div className="k">EGW-30 Flow</div><div className="s">7.0 LPM × 20</div></div>
         <div className="ministat reveal"><div className="v">35/45 °C</div><div className="k">Supply / Return</div><div className="s">ΔT = 10 °C</div></div>
       </div>
+	  
+	  <div className="callout g" style={{marginTop:16}}>
+		<span className="h">CPU/GPU to board leakage</span>
+		The cold plate is modeled as capturing 100% of CPU/GPU power. In reality heat splits between the top path (Die → TIM1 → IHS → TIM2 → Cold Plate → Coolant) and the board path (Die → Substrate → BGA → PCB → air), with R<sub>top</sub>&nbsp;≈&nbsp;0.03–0.05&nbsp;K/W and R<sub>board</sub>&nbsp;≈&nbsp;0.5–2&nbsp;K/W. The die will leak <b>~5% nominal (10% bounding)</b> → <b>180–360 W per node</b> to the air, not coolant.
+	  </div>
     </Sec>
   );
 }
@@ -670,13 +671,13 @@ function Architecture(){
     {h:'Air Cooling',k:'CRAC / In-row',cls:'rej',verdict:'REJECTED',vcls:'no',rows:[
       ['Capacity / rack','30–40 kW'],['PUE','1.30–1.50'],['Heat capture','~100% (air)'],['Density','✗ cannot reach 90 kW']]},
     {h:'DLC Only',k:'Cold plates',cls:'',verdict:'PARTIAL',vcls:'warn',rows:[
-      ['Capacity / rack','> 100 kW'],['PUE','< 1.05'],['Heat capture','~95% (DLC)'],['Density','△ peripherals uncooled']]},
+      ['Capacity / rack','> 100 kW'],['PUE','< 1.05'],['Heat capture','~90–95% (DLC)'],['Density','△ peripherals + board leak uncaptured']]},
     {h:'Hybrid DLC + RDHx',k:'Selected path',cls:'sel',verdict:'SELECTED',vcls:'ok',rows:[
       ['Capacity / rack','> 100 kW'],['PUE','< 1.1'],['Heat capture','100% (DLC + air)'],['Density','✓ full coverage']]},
   ];
   return (
     <Sec id="architecture" n="2" title="Cooling Architecture Selection"
-      sub="A density-vs-efficiency trade study. Air cannot meet the 90 kW target and DLC-only leaves peripherals stranded; the hybrid architecture  closes the gap.">
+      sub="A density-vs-efficiency trade study. Air cannot meet the 90 kW target and DLC-only leaves peripherals stranded; the hybrid architecture closes the gap.">
       <div className="cmp">
         {opts.map((o,i)=>(
           <div key={i} className={'cmp-card reveal '+o.cls}>
@@ -691,8 +692,8 @@ function Architecture(){
       </div>
       <div className="callout g reveal" style={{marginTop:18}}>
         <span className="h">Decision</span>
-        Hybrid <b>DLC + RDHx</b> delivers the full 90 kW at <b>PUE&nbsp;&lt;&nbsp;1.1</b> versus 1.30–1.50 for air. Cold plates capture the
-        3,600 W CPU + GPU load directly; a passive rear-door HX captures the 150 W peripheral air load, enabling near-total heat capture.
+        Hybrid <b>DLC + RDHx</b> delivers the full 90 kW at <b>PUE&nbsp;&lt;&nbsp;1.1</b> versus 1.30–1.50 for air. Cold plates capture
+        ~90–95% of the 3,600 W CPU + GPU load directly; a passive rear-door HX captures the 150 W peripheral air load <i>plus</i> the ~5–10% of CPU/GPU power that leaks through the package into the board, the residual behind the "~90–95% DLC" figure, enabling 100% heat capture.
       </div>
     </Sec>
   );
@@ -753,8 +754,12 @@ function Resistance(){
       </div>
       <div className="callout o reveal" style={{marginTop:18}}>
         <span className="h">Governing constraint</span>
-        After fixed R<sub>jc</sub>, TIM and fouling are subtracted, the GPU leaves only <b>0.0387 K/W</b> for the cold plate versus 0.088 K/W
+        After the fixed R<sub>jc</sub>, TIM, and fouling are subtracted, the GPU leaves only <b>0.0387 K/W</b> for the cold plate versus 0.088 K/W
         for the CPU. The <b>GPU microchannel plate sets the tightest budget</b> and dictates flow, channel geometry, and ΔP downstream.
+      </div>
+      <div className="callout g reveal" style={{marginTop:12}}>
+        <span className="h">Scope Note: Top path vs Board path</span>
+        These ladders size the <b>top path to coolant</b> (Die → TIM1 → IHS → TIM2 → Cold Plate → Coolant) only. The junction also feeds a <b>parallel path to air</b> (Die → substrate → BGA → PCB → air) with R<sub>board</sub>&nbsp;≈&nbsp;0.5–2&nbsp;K/W, an order of magnitude above R<sub>top</sub>. Heat splits inversely with resistance, so <b>~5–10% of CPU/GPU power</b> is rejected to air and captured by the RDHx, not the coolant (see <b>section 1</b>). It does not relax the cold-plate budget since the plate is still sized to the full junction load as a conservative bound on T<sub>j</sub>.
       </div>
     </Sec>
   );
@@ -1205,7 +1210,7 @@ function ColdPlates(){
       <div className="callout o reveal" style={{marginTop:18}}>
         <span className="h">Design driver</span>
         The GPU microchannel plate sets both the tightest Rcp budget (<b>0.0387 K/W</b>) and the highest cold-plate ΔP (<b>13.4 kPa</b>).
-        Both R<sub>θ</sub> and ΔP are flagged for confirmation by detailed CFD of the microchannel geometry.
+        Both R<sub>th</sub> and ΔP are flagged for confirmation by detailed CFD of the microchannel geometry.
       </div>
     </Sec>
   );
