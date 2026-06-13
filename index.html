@@ -540,8 +540,7 @@ function Hero(){
         </p>
         <p className="scope reveal in" style={{marginTop:6}}>
           A 48U rack of twenty 2U nodes, each carrying 2× Xeon Gen-5 CPUs and 4× H100 / MI300X-class GPUs,
-          dissipates far beyond the <b>~40&nbsp;kW ceiling of any air-cooled rack</b>. This review closes the full thermal-hydraulic
-          analysis that delivers it at warm-water supply, with CPU and GPU junctions within their limits and loop's hydraulic budget.
+          dissipates far beyond the <b>~40&nbsp;kW ceiling of any air-cooled rack</b>. This review closes the full thermal-hydraulic analysis that delivers it at warm-water supply, with CPU and GPU junction temperature and cold-plates within their limits and loop's hydraulic budget.
         </p>
         <div className="heroflags reveal in">
 		  <span className="flag">Thermal resistance budget</span>
@@ -937,7 +936,7 @@ function GpuCfd(){
             </tbody>
           </table>
           <p className="cap" style={{marginTop:12}}>
-            Thermal resistance of the GPU cold plate at 0.0281&nbsp;K/W sits ~22% above the analytical local-fluid R<sub>cp</sub> (0.0231&nbsp;K/W). The microchannel cold plate is within the 0.0387&nbsp;K/W budget (11.1% margin inlet-referenced).
+            Thermal resistance of the GPU cold plate at 0.0281&nbsp;K/W sits ~22% above the analytical local-fluid R<sub>cp</sub> (0.0231&nbsp;K/W). The microchannel cold plate is within the 0.0387&nbsp;K/W budget (27.4% margin inlet-referenced).
           </p>
         </div>
       </div>
@@ -996,7 +995,7 @@ function CDU(){
         <div className="ministat reveal" style={{borderTop:'2px solid var(--cyan)'}}><div className="v">~97 kW</div><div className="k">Selected | brazed PHE capacity</div><div className="s">7.6% thermal margin over the 90 kW basis</div></div>
         <div className="callout reveal">
           <span className="h">Sizing intent</span>
-          Plate count is rounded <b>36.9 → 44</b> to lift effectiveness from 0.667 to 0.717, giving ~7.6% headroom at the conservative fouled U = 3,000 W/(m²·K). The round-up is capacity assurance, reserve to still deliver ≥90 kW after end-of-life fouling and at worst-case facility supply temperature.
+          Plate count is rounded <b>36.9 → 44</b> to lift effectiveness from 0.667 to 0.717, giving ~7.6% headroom at the conservative fouled U = 3,000 W/(m²·K). The round-up is capacity assurance that reserve to still deliver ≥90 kW after end-of-life fouling and at worst-case facility supply temperature.
         </div>
       </div>
     </Sec>
@@ -1065,8 +1064,8 @@ function RackSim(){
           <div className="grid2" style={{gap:10}}>
             <div className="ministat"><div className="v">37.7 kPa</div><div className="k">Rack network ΔP @ 140 LPM</div></div>
             <div className="ministat"><div className="v">140 LPM</div><div className="k">Total flow (driven)</div></div>
-            <div className="ministat"><div className="v">Top Node</div><div className="k">Min GPU flow = 1.29 LPM, Server FLow = 6.68 LPM</div></div>
-            <div className="ministat"><div className="v">Bottom Node</div><div className="k">max GPU flow = 1.59 LPM, Server FLow = 7.87 LPM</div></div>
+            <div className="ministat"><div className="v">Top Node</div><div className="k">Min GPU flow = 1.29 LPM, Server Flow = 6.68 LPM</div></div>
+            <div className="ministat"><div className="v">Bottom Node</div><div className="k">max GPU flow = 1.59 LPM, Server Flow = 7.87 LPM</div></div>
           </div>
           <div className="callout g" style={{marginTop:14}}>
             <span className="h">Reconciles with the pump budget</span>
@@ -1114,7 +1113,7 @@ function RackSim(){
         <PQChart/>
         <div className="grid2" style={{marginTop:8}}>
           <div className="lgnd"><span className="sw" style={{background:'var(--orange)'}}></span>GPU cold plate (microchannel ΔP∝Q¹·¹)</div>
-          <div className="lgnd"><span className="sw" style={{background:'var(--cyan-bright)'}}></span>CPU branch (pin-fin plate + 2 mm orifice (ΔP∝Q²)</div>
+          <div className="lgnd"><span className="sw" style={{background:'var(--cyan-bright)'}}></span>CPU branch (pin-fin plate + 2 mm orifice ΔP∝Q²)</div>
           <div className="lgnd"><span className="sw" style={{background:'var(--cyan)',opacity:.8}}></span>CPU cold plate alone (no orifice)</div>
         </div>
       </div>
@@ -1533,7 +1532,7 @@ function Materials(){
     ['Corrosion inhibitor','3–5% active','Quarterly'],['Particulate (filter)','≤ 25–30 µm bag (50 µm too coarse for 300 µm channels)','ΔP-driven'],['Biological / TVC','< 10³ CFU/mL','Semi-annual'],['Full fluid change','inhibitor depletion','≈ 5 yr']];
   return (
     <Sec id="materials" n="13" title="Material Compatibility & Fluid Maintenance"
-      sub="A galvanic compatibility matrix sets one hard rule; no aluminium in the wetted loop.">
+      sub="A galvanic compatibility matrix sets one hard rule; no aluminum in the wetted loop.">
       <div className="grid2">
         <div className="card reveal">
           <h3 style={{marginBottom:14}}><span className="dot o"></span>Wetted-material galvanic matrix (EGW-30)</h3>
@@ -1548,8 +1547,8 @@ function Materials(){
             </tbody>
           </table>
           <div className="callout o" style={{marginTop:16}}>
-            <span className="h">Critical: no aluminium in the wetted loop</span>
-            Cu–Al galvanic potential ≈ <b>−650 mV</b> drives rapid pitting of the anodic aluminium. All plates, manifolds, fittings and
+            <span className="h">Critical: no aluminum in the wetted loop</span>
+            Cu–Al galvanic potential ≈ <b>−650 mV</b> drives rapid pitting of the anodic aluminum. All plates, manifolds, fittings and
             the CDU secondary loop are <b>copper / 316L stainless with EPDM</b> (not NBR) elastomers.
           </div>
         </div>
