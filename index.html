@@ -392,20 +392,20 @@ const Drop = ({size=26,color="var(--cyan)"}) => (
 
 /* ---------- NAV ---------- */
 const SECTIONS = [
-  {id:'overview', t:'Overview'},
-  {id:'architecture', t:'Architecture'},
-  {id:'resistance', t:'Rth Budget'},
-  {id:'coolant', t:'Coolant'},
+  {id:'overview', t:'System Config'},
+  {id:'architecture', t:'Cooling Architecture'},
+  {id:'resistance', t:'Cold-plate Rth Budget'},
+  {id:'coolant', t:'Coolant Selection'},
   {id:'flow', t:'Energy Balance'},
-  {id:'coldplates', t:'Cold Plates'},
-  {id:'cpucfd', t:'CPU CFD'},
-  {id:'gpucfd', t:'GPU CFD'},
-  {id:'cdu', t:'CDU Thermal'},
-  {id:'racksim', t:'Rack Sim (Simulink)'},
-  {id:'pump', t:'CDU Hydraulic'},
-  {id:'controls', t:'Valves'},
-  {id:'materials', t:'Material compatibility'},
-  {id:'summary', t:'Results'},
+  {id:'coldplates', t:'Cold-plate Design'},
+  {id:'cpucfd', t:'CPU Cold-plate CFD'},
+  {id:'gpucfd', t:'GPU Cold-plate CFD'},
+  {id:'cdu', t:'CDU Heat Exchanger'},
+  {id:'racksim', t:'Rack-level Hydraulics'},
+  {id:'pump', t:'CDU Selection'},
+  {id:'controls', t:'Valve Sizing'},
+  {id:'materials', t:'Material Compatibility'},
+  {id:'summary', t:'Summary'},
 ];
 
 function Nav(){
@@ -714,7 +714,7 @@ function ResLadder({rows,total,budget,color,dim}){
 }
 function Resistance(){
   return (
-    <Sec id="resistance" n="3" title="Thermal Resistance Budget: CPU & GPU"
+    <Sec id="resistance" n="3" title="Thermal Resistance Budget: CPU & GPU Cold-plates"
       sub="Working backward from junction temperature limits to find the maximum thermal resistance available for the cold plates. The GPU sets the tightest budget and governs the entire thermal design.">
       <div className="grid2">
         <div className="card reveal">
@@ -1573,14 +1573,14 @@ function Materials(){
 /* ---------- 13. SUMMARY ---------- */
 function Summary(){
   const cards=[
-    {v:'0.0462',k:'CPU Cold Plate, Rth (K/W)',s:'vs 0.088 budget',o:false},
+    {v:'0.0415',k:'CPU Cold Plate, Rth (K/W)',s:'vs 0.088 budget',o:false},
     {v:'76.4 °C',k:'CPU Junction, T',s:'18.6 K margin (CFD)',o:false},
-    {v:'0.0231',k:'GPU Cold Plate, Rth (K/W)',s:'vs 0.0387 budget',o:true},
+    {v:'0.0281',k:'GPU Cold Plate, Rth (K/W)',s:'vs 0.0387 budget',o:true},
     {v:'87.6 °C',k:'GPU Junction, T',s:'7.4 K margin (CFD, uniform-flux)',o:true},
-    {v:'≥90 kW',k:'CDU capacity',s:'~8% over design',o:false},
+    {v:'≥90 kW',k:'CDU capacity',s:'~10% over design',o:false},
     {v:'37.7 kPa',k:'System Impedance',s:'@ 140 LPM',o:false},
-	{v:'13.4 kPa',k:'GPU plate ΔP (governs)',s:'vs 20 kPa budget',o:true},
-    {v:'Imbalance',k:'CPU 0.44 kPa vs GPU 12.7 kPa',s:'orifice needed for flow balance',o:true},
+	{v:'12.0 kPa',k:'GPU plate ΔP (governs)',s:'vs 20 kPa budget',o:true},
+    {v:'Imbalance',k:'CPU 0.67 kPa vs GPU 12.0 kPa',s:'orifice needed for flow balance',o:true},
 
   ];
   return (
