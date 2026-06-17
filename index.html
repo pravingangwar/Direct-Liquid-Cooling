@@ -403,7 +403,6 @@ const SECTIONS = [
   {id:'cdu', t:'CDU Heat Exchanger'},
   {id:'racksim', t:'Rack-level Hydraulics'},
   {id:'pump', t:'CDU Selection'},
-  {id:'controls', t:'Valve Sizing'},
   {id:'materials', t:'Material Compatibility'},
   {id:'summary', t:'Summary'},
 ];
@@ -532,8 +531,8 @@ function Hero(){
         <h1 className="reveal in">Rack-Level<br/><span className="hl">Direct Liquid Cooling</span></h1>
         <p className="lede reveal in">
           A full-stack thermal &amp; hydraulic design of a <b>90&nbsp;kW direct-liquid-cooled rack</b>,
-          including thermal resistance budgets, cold-plate geometry, hand calculations using empirical relations, CFD simulation, CDU heat-exchanger
-          sizing, manifold hydraulics, MATLAB/Simulink hydraulic modeling, CDU, QD &amp; valve selection, and wetted-material compatibility.
+          including thermal resistance budgets, cold-plate geometry, hand calculations using empirical relations, CFD simulations, CDU heat-exchanger
+          sizing, manifold hydraulics, MATLAB/Simulink hydraulic modeling (Rack-level), CDU, QD &amp; valve selection, and wetted-material compatibility.
         </p>
         <p className="scope reveal in">
           <b>48U rack · 20 × 2U nodes · EGW-30 warm-water loop · ASHRAE&nbsp;W3 (35&nbsp;°C supply)</b>
@@ -547,15 +546,15 @@ function Hero(){
 		  <span className="flag">Hybrid <b>DLC + RDHx</b></span>
 		  <span className="flag">Coolant trade study (EGW-30)</span>
 		  <span className="flag">Cold-plate design</span>
-          <span className="flag">Colebrook–White relations</span>
-          <span className="flag">Zukauskas + Shah HTC correlations</span>
+          <span className="flag">Colebrook–White relation</span>
+		  <span className="flag">Darcy–Weisbach relation</span>
+          <span className="flag">Zukauskas + Shah HTC correlation</span>
           <span className="flag">Yovanovich spreading resistance</span>
           <span className="flag">CFD validation</span>
 		  <span className="flag">CDU thermal sizing</span>
           <span className="flag">Rack network simulation (Simulink)</span>
           <span className="flag">CDU hydraulic sizing</span>
           <span className="flag">Flow balancing (orifice)</span>
-          <span className="flag">Valve sizing &amp; controls</span>
 		  <span className="flag">Galvanic matrix</span>
 
         </div>
@@ -1531,7 +1530,7 @@ function Materials(){
   const maint=[['Conductivity','< 20 µS/cm','Monthly'],['pH','7.5–8.5','Monthly'],['Glycol concentration','28–32% vol','Quarterly'],
     ['Corrosion inhibitor','3–5% active','Quarterly'],['Particulate (filter)','≤ 25–30 µm bag (50 µm too coarse for 300 µm channels)','ΔP-driven'],['Biological / TVC','< 10³ CFU/mL','Semi-annual'],['Full fluid change','inhibitor depletion','≈ 5 yr']];
   return (
-    <Sec id="materials" n="13" title="Material Compatibility & Fluid Maintenance"
+    <Sec id="materials" n="12" title="Material Compatibility & Fluid Maintenance"
       sub="A galvanic compatibility matrix sets one hard rule; no aluminum in the wetted loop.">
       <div className="grid2">
         <div className="card reveal">
@@ -1584,7 +1583,7 @@ function Summary(){
 
   ];
   return (
-    <Sec id="summary" n="14" title="Design Summary & Validation"
+    <Sec id="summary" n="13" title="Design Summary & Validation"
       sub="Junction temperature, pressure losses, and system impedance are verified using CFD and MATLAB/Simulink models.">
       <div className="grid4">
         {cards.map((c,i)=>(
@@ -1658,7 +1657,6 @@ function App(){
       <CDU/>
       <RackSim/>
       <Pump/>
-      <Controls/>
       <Materials/>
       <Summary/>
       <Footer/>
