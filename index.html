@@ -95,7 +95,7 @@
   .heroauthor .r{color:var(--muted); font-size:12.5px}
   .heroauthor a.e{color:var(--cyan-bright); font-family:'IBM Plex Mono',monospace; font-size:12.5px}
 
-  .herostats{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-tPhysical stack (cross-section)op:46px}
+  .herostats{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-top:46px}
   .hstat{background:linear-gradient(180deg,var(--panel),var(--panel-2)); border:1px solid var(--line);
     border-top:2px solid var(--cyan); border-radius:var(--r); padding:18px 18px 16px; box-shadow:var(--shadow)}
   .hstat.o{border-top-color:var(--orange)}
@@ -764,6 +764,21 @@ function Resistance(){
   );
 }
 
+/* =====================================================================
+   ThermalPathFigure  -  drop-in figure for Section 3 (Resistance budget)
+   ---------------------------------------------------------------------
+   Left  : physical cross-section  Die -> TIM1 -> IHS -> TIM2 -> Cold Plate -> Coolant,
+           plus the parallel board path  Die -> Substrate -> BGA -> PCB -> Air (RDHx).
+   Right : equivalent thermal-resistance network (GPU-governing values).
+   Uses only inline SVG, so it has no dependency on chart libraries. Colors
+   reference the existing --cyan / --orange vars with hard fallbacks.
+
+   INTEGRATION
+   1) Paste this whole function next to Resistance() in your script block.
+   2) Inside Resistance(), add <ThermalPathFigure/> right after the
+      </div> that closes the grid2, and before the "Governing constraint"
+      callout.
+   ===================================================================== */
 function ThermalPathFigure(){
   const CY   = 'var(--cyan,#1f9cb6)';
   const CYL  = '#dff1f5';
@@ -934,6 +949,7 @@ function ThermalPathFigure(){
     </div>
   );
 }
+
 
 /* ---------- 4. COOLANT ---------- */
 function Coolant(){
@@ -1548,9 +1564,9 @@ function PumpChart(){
 
       {/* Inline curve labels */}
       <text x={px(135)} y={py(168)} fontSize="11.5" fill={labelColor} fontWeight="700" textAnchor="middle">2 × CDU @ 100%</text>
-      <text x={px(92)}  y={py(122)} fontSize="11.5" fill={labelColor} fontWeight="700" textAnchor="middle">1× CDU @ 100%</text>
-      <text x={px(62)}  y={py(63)}  fontSize="11"   fill={labelColor} fontWeight="600" textAnchor="middle">2× CDU @ 65%</text>
-      <text x={px(70)}  y={py(16)}  fontSize="11"   fill={labelColor} fontWeight="600" textAnchor="middle">System impedance curve</text>
+      <text x={px(105)}  y={py(125)} fontSize="11.5" fill={labelColor} fontWeight="700" textAnchor="middle">1× CDU @ 100%</text>
+      <text x={px(62)}  y={py(60)}  fontSize="11"   fill={labelColor} fontWeight="600" textAnchor="middle">2× CDU @ 65%</text>
+      <text x={px(70)}  y={py(20)}  fontSize="11"   fill={labelColor} fontWeight="600" textAnchor="middle">System impedance curve</text>
 
       {/* Markers */}
       <circle cx={px(140)}   cy={py(37.7)} r="6"   fill="var(--orange)" stroke="white" strokeWidth="2"/>
