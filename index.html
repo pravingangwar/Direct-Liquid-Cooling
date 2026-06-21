@@ -764,21 +764,6 @@ function Resistance(){
   );
 }
 
-/* =====================================================================
-   ThermalPathFigure  -  drop-in figure for Section 3 (Resistance budget)
-   ---------------------------------------------------------------------
-   Left  : physical cross-section  Die -> TIM1 -> IHS -> TIM2 -> Cold Plate -> Coolant,
-           plus the parallel board path  Die -> Substrate -> BGA -> PCB -> Air (RDHx).
-   Right : equivalent thermal-resistance network (GPU-governing values).
-   Uses only inline SVG, so it has no dependency on chart libraries. Colors
-   reference the existing --cyan / --orange vars with hard fallbacks.
-
-   INTEGRATION
-   1) Paste this whole function next to Resistance() in your script block.
-   2) Inside Resistance(), add <ThermalPathFigure/> right after the
-      </div> that closes the grid2, and before the "Governing constraint"
-      callout.
-   ===================================================================== */
 function ThermalPathFigure(){
   const CY   = 'var(--cyan,#1f9cb6)';
   const CYL  = '#dff1f5';
