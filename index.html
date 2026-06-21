@@ -750,6 +750,7 @@ function Resistance(){
           ]}/>
         </div>
       </div>
+		<ThermalPathFigure/>
       <div className="callout o reveal" style={{marginTop:18}}>
         <span className="h">Governing constraint</span>
         After the fixed R<sub>jc</sub>, TIM, and fouling are subtracted, the GPU leaves only <b>0.0387 K/W</b> for the cold plate versus 0.088 K/W
@@ -759,7 +760,6 @@ function Resistance(){
         <span className="h">Scope Note: Top path vs Board path</span>
         These ladders size the <b>top path to coolant</b> (Die → TIM1 → IHS → TIM2 → Cold Plate → Coolant) only. The junction also feeds a <b>parallel path to air</b> (Die → substrate → BGA → PCB → air) with R<sub>bot</sub>&nbsp;≈&nbsp;0.5–2&nbsp;K/W, an order of magnitude above R<sub>top</sub>. Heat splits inversely with resistance, so <b>~5–10% of CPU/GPU power</b> is rejected to air and captured by the RDHx, not the coolant.
       </div>
-	  <ThermalPathFigure/>
     </Sec>
   );
 }
