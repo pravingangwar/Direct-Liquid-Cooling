@@ -943,13 +943,13 @@ function ThermalPathFigure(){
 
         {/* R_top bracket - coolant path total */}
         <path d="M812,131 H820 V311 H812 M820,221 H828" fill="none" stroke={CY} strokeWidth="1.6"/>
-        <text x={832} y={217} fontFamily={SANS} fontSize="12.5" fontWeight="700" fill={CY}>R_top = 0.0857</text>
-        <text x={832} y={232} fontFamily={SANS} fontSize="11" fill={MUT}>K/W (to coolant)</text>
+        <text x={832} y={217} fontFamily={SANS} fontSize="12.5" fontWeight="700" fill={CY}>R_top = 0.0857 K/W</text>
+        <text x={832} y={232} fontFamily={SANS} fontSize="11" fill={MUT}>(to coolant)</text>
 
         {/* R_bot bracket - board-to-air path total */}
         <path d="M812,365 H820 V467 H812 M820,416 H828" fill="none" stroke={PCBE} strokeWidth="1.6"/>
-        <text x={832} y={412} fontFamily={SANS} fontSize="12.5" fontWeight="700" fill={PCBE}>R_bot ~ 1.0</text>
-        <text x={832} y={427} fontFamily={SANS} fontSize="11" fill={MUT}>K/W (0.5-2 range)</text>
+        <text x={832} y={412} fontFamily={SANS} fontSize="12.5" fontWeight="700" fill={PCBE}>R_bot ~ 0.5-2.0 K/W </text>
+        <text x={832} y={427} fontFamily={SANS} fontSize="11" fill={MUT}>(to RDHx)</text>
 
         {/* split arrows at the junction (heat = orange) */}
         <line x1={SX-46} y1={336} x2={SX-46} y2={318} stroke={OR} strokeWidth="2" markerEnd="url(#ahO)"/>
