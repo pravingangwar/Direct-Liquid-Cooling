@@ -571,7 +571,7 @@ function Hero(){
           <div className="hstat reveal"><div className="v mono">90 kW</div><div className="k">Rack Design Load</div><div className="s">75 kW, Nominal + 20% margin</div></div>
           <div className="hstat reveal"><div className="v mono">140 LPM</div><div className="k">EGW-30 @ 35 °C</div><div className="s">~1.55 LPM/kW design basis</div></div>
           <div className="hstat o reveal"><div className="v mono">76.4 °C</div><div className="k">CPU Junction </div><div className="s">18.6 °C margin (CFD)</div></div>
-          <div className="hstat o reveal"><div className="v mono">87.6 °C</div><div className="k">GPU Junction (governing)</div><div className="s">7.4 °C margin (CFD, uniform-flux)</div></div>
+          <div className="hstat o reveal"><div className="v mono">87.6 °C</div><div className="k">GPU Junction (governing)</div><div className="s">7.4 °C margin (CFD)</div></div>
         </div>
 
         <Schematic/>
@@ -639,7 +639,7 @@ function Overview(){
           <p className="cap">Cold plates capture the high-flux silicon via the top (IHS) path; a passive rear-door HX mops up the peripheral air load <i>plus</i> the CPU/GPU heat that leaks through the package into the board, together reaching 100% heat capture.</p>
           <div className="callout" style={{marginBottom:12}}>
             <span className="h">DLC: cold plates (top path)</span>
-            Direct-contact plates carry 90–95% of the <b>3,600 W per node</b> (CPU + GPU) through the junction→IHS→plate path; this load cannot be air-cooled at this density.
+            Direct-contact plates carry 90–95% of the <b>3,600 W per node</b> (CPU + GPU) through the junction→IHS→Cold-plate path; this load cannot be air-cooled at this density.
           </div>
           <div className="callout o" style={{marginBottom:12}}>
             <span className="h">RDHx: rear-door air</span>
@@ -657,7 +657,7 @@ function Overview(){
 	  
 	  <div className="callout g" style={{marginTop:16}}>
 		<span className="h">CPU/GPU to board leakage</span>
-		The cold plate is modeled as capturing 100% of CPU/GPU power. In reality heat splits between the top path (Die → TIM1 → IHS → TIM2 → Cold Plate → Coolant) and the board path (Die → Substrate → BGA → PCB → air), with R<sub>top</sub>&nbsp;≈&nbsp;0.03–0.05&nbsp;K/W and R<sub>board</sub>&nbsp;≈&nbsp;0.5–2&nbsp;K/W. The die will leak <b>~5% nominal (10% bounding)</b> → <b>180–360 W per node</b> to the air, not coolant.
+		The cold plate is modeled as capturing 100% of CPU/GPU power. In reality heat splits between the top path (Die → TIM1 → IHS → TIM2 → Cold Plate → Coolant) and the board path (Die → Substrate → BGA → PCB → air), with R<sub>top</sub>&nbsp;≈&nbsp;0.03–0.05&nbsp;K/W and R<sub>bot</sub>&nbsp;≈&nbsp;0.5–2&nbsp;K/W. The die will leak <b>~5% nominal (10% bounding)</b> → <b>180–360 W per node</b> to the air, not coolant.
 	  </div>
     </Sec>
   );
@@ -757,7 +757,7 @@ function Resistance(){
       </div>
       <div className="callout g reveal" style={{marginTop:12}}>
         <span className="h">Scope Note: Top path vs Board path</span>
-        These ladders size the <b>top path to coolant</b> (Die → TIM1 → IHS → TIM2 → Cold Plate → Coolant) only. The junction also feeds a <b>parallel path to air</b> (Die → substrate → BGA → PCB → air) with R<sub>board</sub>&nbsp;≈&nbsp;0.5–2&nbsp;K/W, an order of magnitude above R<sub>top</sub>. Heat splits inversely with resistance, so <b>~5–10% of CPU/GPU power</b> is rejected to air and captured by the RDHx, not the coolant (see <b>section 1</b>). It does not relax the cold-plate budget since the plate is still sized to the full junction load as a conservative bound on T<sub>j</sub>.
+        These ladders size the <b>top path to coolant</b> (Die → TIM1 → IHS → TIM2 → Cold Plate → Coolant) only. The junction also feeds a <b>parallel path to air</b> (Die → substrate → BGA → PCB → air) with R<sub>bot</sub>&nbsp;≈&nbsp;0.5–2&nbsp;K/W, an order of magnitude above R<sub>top</sub>. Heat splits inversely with resistance, so <b>~5–10% of CPU/GPU power</b> is rejected to air and captured by the RDHx, not the coolant.
       </div>
 	  <ThermalPathFigure/>
     </Sec>
@@ -790,6 +790,7 @@ function ThermalPathFigure(){
   const GR   = '#9aa7b2';
   const SUB  = '#e7ebef';
   const SUBE = '#5f7180';
+  const PCBF = '#dff0e6';
   const PCBE = '#2f8a5e';
   const INK  = '#1d2b3a';
   const MUT  = '#5f7180';
@@ -799,16 +800,16 @@ function ThermalPathFigure(){
 
   // helper for a resistance node + value row on the network spine
   const SX = 730;                 // network spine x
-  const box = (cy,name,val,big)=>(
+  const box = (cy,name,val,accent)=>(
     <g>
       <rect x={SX-30} y={cy-15} width="60" height="30" rx="6"
-            fill="#fff" stroke={big?OR:INK} strokeWidth={big?2:1.4}/>
+            fill="#fff" stroke={accent} strokeWidth="1.6"/>
       <path d={`M${SX-16},${cy} l3,-6 l5,12 l5,-12 l5,12 l5,-12 l3,6`}
-            fill="none" stroke={big?OR:INK} strokeWidth="1.4"/>
+            fill="none" stroke={accent} strokeWidth="1.4"/>
       <text x={SX-40} y={cy-2} textAnchor="end" fontFamily={SANS}
             fontSize="12.5" fill={INK} fontWeight="600">{name}</text>
       <text x={SX+40} y={cy+4} fontFamily={MONO} fontSize="12.5"
-            fill={big?OR:INK} fontWeight="600">{val}</text>
+            fill={accent} fontWeight="700">{val}</text>
     </g>
   );
   const node = (cy,label,col,r)=>(
@@ -825,7 +826,7 @@ function ThermalPathFigure(){
         Die heat splits at the junction: a low-resistance series path up to the coolant, and a high-resistance parallel path down through the board to air.
       </p>
 
-      <svg viewBox="0 0 980 510" width="100%" style={{maxWidth:980,display:'block',margin:'4px auto'}}
+      <svg viewBox="0 0 980 555" width="100%" style={{maxWidth:980,display:'block',margin:'4px auto'}}
            xmlns="http://www.w3.org/2000/svg" role="img"
            aria-label="Cross-section of the die-to-coolant stack and its equivalent thermal-resistance network">
         <defs>
@@ -838,8 +839,11 @@ function ThermalPathFigure(){
         </defs>
 
         {/* ============================ LEFT: cross-section ============================ */}
-        <text x={240} y={35} textAnchor="middle" fontFamily={SANS} fontSize="13"
+        {/* title stays at the top, aligned with the right-hand title */}
+        <text x={240} y={40} textAnchor="middle" fontFamily={SANS} fontSize="13"
               fontWeight="700" fill={INK}>Physical stack (cross-section)</text>
+        {/* body shifted down to vertically center against the taller right network */}
+        <g transform="translate(0,26)">
 
         {/* coolant ports - small inlet/outlet nozzles on the cold plate */}
         <text x={188} y={48} textAnchor="middle" fontFamily={MONO} fontSize="11" fill={CY}>35 C in</text>
@@ -919,50 +923,71 @@ function ThermalPathFigure(){
         ))}
         <rect x={160} y={418} width={160} height={34} rx="5" fill="#f3f6f8" stroke={GR} strokeWidth="1.2"/>
         <text x={240} y={439} textAnchor="middle" fontFamily={SANS} fontSize="12" fill={MUT}>Rear-door HX (air)</text>
+        </g>
 
         {/* divider */}
-        <line x1={486} y1={70} x2={486} y2={470} stroke={TRK} strokeWidth="2" strokeDasharray="4 5"/>
+        <line x1={486} y1={60} x2={486} y2={500} stroke={TRK} strokeWidth="2" strokeDasharray="4 5"/>
 
         {/* ============================ RIGHT: resistance network ============================ */}
         <text x={SX} y={40} textAnchor="middle" fontFamily={SANS} fontSize="13"
               fontWeight="700" fill={INK}>Equivalent thermal-resistance network</text>
         <text x={SX} y={56} textAnchor="middle" fontFamily={SANS} fontSize="11" fill={MUT}>GPU-governing values, K/W</text>
 
+        {/* network body nudged up to align its content with the left stack */}
+        <g transform="translate(0,-16)">
         {/* spine */}
-        <line x1={SX} y1={104} x2={SX} y2={440} stroke={INK} strokeWidth="1.6"/>
+        <line x1={SX} y1={104} x2={SX} y2={492} stroke={INK} strokeWidth="1.6"/>
 
+        {/* --- coolant (top) branch: cyan --- */}
         {node(104,'Coolant inlet  35 C',CY,6)}
-        {box(146,'R_cp + R_foul','0.0407')}
-        {node(188,'Cold-plate surface',INK,5)}
-        {box(224,'R_TIM2 (PCM)','0.010')}
-        {node(260,'IHS',INK,5)}
-        {box(296,'R_jc','0.035')}
+        {box(146,'R_cp + R_foul','0.0407',CY)}
+        {node(188,'Cold-plate',CY,5)}
+        {box(224,'R_TIM2 (PCM)','0.010',CY)}
+        {node(260,'IHS',CY,5)}
+        {box(296,'R_jc','0.035',CY)}
+        {/* --- source --- */}
         {node(336,'Junction  Tj <= 95 C',OR,9)}
-        {box(395,'R_board','~ 0.5-2',true)}
-        {node(440,'Air via RDHx',PCBE,6)}
+        {/* --- board-to-air (bottom) branch: green --- */}
+        {box(390,'R_jb','',PCBE)}
+        {node(422,'PCB',PCBE,5)}
+        {box(452,'R_ba','',PCBE)}
+        {node(492,'Air via RDHx',PCBE,6)}
 
         {/* junction heat label */}
         <text x={SX+18} y={352} fontFamily={MONO} fontSize="11" fill={MUT}>Q ~ 700 W</text>
 
-        {/* split arrows at the junction */}
-        <line x1={SX-46} y1={336} x2={SX-46} y2={318} stroke={OR} strokeWidth="2" markerEnd="url(#ahO)"/>
-        <text x={SX-60} y={332} textAnchor="end" fontFamily={SANS} fontSize="10.5" fontWeight="700" fill={OR}>~90-95%</text>
-        <line x1={SX-46} y1={352} x2={SX-46} y2={370} stroke={OR} strokeWidth="2" markerEnd="url(#ahO)"/>
-        <text x={SX-60} y={368} textAnchor="end" fontFamily={SANS} fontSize="10.5" fontWeight="700" fill={OR}>~5-10%</text>
+        {/* R_top bracket - coolant path total */}
+        <path d="M812,131 H820 V311 H812 M820,221 H828" fill="none" stroke={CY} strokeWidth="1.6"/>
+        <text x={832} y={217} fontFamily={SANS} fontSize="12.5" fontWeight="700" fill={CY}>R_top = 0.0857</text>
+        <text x={832} y={232} fontFamily={SANS} fontSize="11" fill={MUT}>K/W (to coolant)</text>
 
-        {/* footer identity */}
-        <text x={SX} y={486} textAnchor="middle" fontFamily={MONO} fontSize="11" fill={MUT}>
-          series up-path: R_jc + R_TIM2 + R_cp + R_foul = 0.0857 = GPU R_total
+        {/* R_bot bracket - board-to-air path total */}
+        <path d="M812,365 H820 V467 H812 M820,416 H828" fill="none" stroke={PCBE} strokeWidth="1.6"/>
+        <text x={832} y={412} fontFamily={SANS} fontSize="12.5" fontWeight="700" fill={PCBE}>R_bot ~ 1.0</text>
+        <text x={832} y={427} fontFamily={SANS} fontSize="11" fill={MUT}>K/W (0.5-2 range)</text>
+
+        {/* split arrows at the junction (heat = orange) */}
+        <line x1={SX-46} y1={336} x2={SX-46} y2={318} stroke={OR} strokeWidth="2" markerEnd="url(#ahO)"/>
+        <text x={SX-60} y={332} textAnchor="end" fontFamily={SANS} fontSize="10.5" fontWeight="700" fill={OR}>~ 90-95%</text>
+        <line x1={SX-46} y1={352} x2={SX-46} y2={370} stroke={OR} strokeWidth="2" markerEnd="url(#ahO)"/>
+        <text x={SX-60} y={360} textAnchor="end" fontFamily={SANS} fontSize="10.5" fontWeight="700" fill={OR}>~ 5-10%</text>
+
+        {/* footer identities */}
+        <text x={SX} y={524} textAnchor="middle" fontFamily={MONO} fontSize="11" fill={MUT}>
+          coolant path: R_top = R_jc + R_TIM2 + R_cp + R_foul = 0.0857 K/W
         </text>
+        <text x={SX} y={540} textAnchor="middle" fontFamily={MONO} fontSize="11" fill={MUT}>
+          air path: R_bot = R_jb + R_ba ~ 0.5-2.0 K/W
+        </text>
+        </g>
       </svg>
 
       <p className="cap" style={{marginTop:8}}>
-        The series path to the coolant carries the bulk of the load through roughly 0.086 K/W, while the board path to air sits an order of magnitude higher at 0.5 to 2 K/W. Heat divides inversely with resistance, so only a small fraction reaches the air and is captured by the RDHx. The cold plate is still sized to the full junction load as a conservative bound on Tj.
+        The series path to the coolant carries the bulk of the load through 0.0857 K/W. Heat divides inversely with resistance, so only a small fraction reaches the air and is captured by the RDHx. The cold plate is still sized to the full junction load as a conservative bound on Tj.
       </p>
     </div>
   );
 }
-
 
 /* ---------- 4. COOLANT ---------- */
 function Coolant(){
@@ -1037,7 +1062,7 @@ function Flow(){
           </div>
         </div>
         <div className="card reveal">
-          <h3 style={{marginBottom:16}}><span className="dot"></span>Rack-level flow summary: 20 nodes</h3>
+          <h3 style={{marginBottom:16}}><span className="dot"></span>Rack-level summary: 20 nodes</h3>
           <div className="grid2" style={{gap:10}}>
             <div className="ministat"><div className="v">7.0 LPM</div><div className="k">Per-node flow</div></div>
             <div className="ministat"><div className="v">140 LPM</div><div className="k">Rack total flow</div></div>
@@ -1046,7 +1071,7 @@ function Flow(){
           </div>
 		  <div className="callout" style={{marginTop:14}}>
             <span className="h">Why ΔT = 10 °C</span>
-            The sweet spot at ASHRAE W3 (35 °C supply): lower ΔT inflates flow &amp; pump power; higher ΔT pushes the GPU junction toward its limit.
+            The sweet spot at ASHRAE W3 (35 °C supply): lower ΔT inflates flow rate &amp; pump power; higher ΔT pushes the GPU junction toward its limit.
           </div>
           <div className="callout g" style={{marginTop:16}}>
             <span className="h">Energy balance ✓</span>
@@ -1073,7 +1098,7 @@ function GpuCfd(){
       {/* setup */}
       <div className="card reveal" style={{marginBottom:18}}>
         <h3 style={{marginBottom:6}}><span className="dot o"></span>CFD model setup &amp; boundary conditions</h3>
-        <p className="cap">Single GPU plate from the 4-up parallel feed. Conjugate Cu&nbsp;C110 solid + EGW-30 fluid, 80 microchannels (0.3&nbsp;mm&nbsp;×&nbsp;1&nbsp;mm, D<sub>h</sub>&nbsp;461.5&nbsp;µm). Mass-flow inlet at supply temperature, static-pressure outlet, 700&nbsp;W base footprint.</p>
+        <p className="cap">Conjugate heat transfer analysis of a single GPU cold plate: Cu&nbsp;C110 solid + EGW-30 fluid, 80 microchannels (0.3&nbsp;mm&nbsp;×&nbsp;1&nbsp;mm, D<sub>h</sub>&nbsp;461.5&nbsp;µm). Mass-flow inlet at supply temperature of 35 °C, static-pressure outlet, 700&nbsp;W base footprint.</p>
         <div className="grid4" style={{marginTop:8}}>
           <div className="ministat"><div className="v">1.36 LPM</div><div className="k">Inlet flowrate</div><div className="s">per-GPU branch</div></div>
           <div className="ministat"><div className="v">35 °C</div><div className="k">Inlet temperature</div><div className="s">ASHRAE W3 supply</div></div>
@@ -1112,7 +1137,7 @@ function GpuCfd(){
           </tbody>
         </table>
         <p className="cap" style={{marginTop:12}}>
-          Energy balance closes to within 3%: ṁ&nbsp;=&nbsp;ρ·V̇&nbsp;=&nbsp;0.0235&nbsp;kg/s gives ΔT&nbsp;=&nbsp;700/(0.0235 × 3800)&nbsp;=&nbsp;7.8&nbsp;°C against the CFD ≈&nbsp;7.96&nbsp;°C. The laminar Darcy–Weisbach ΔP estimate (13.4&nbsp;kPa) is conservative. CFD lands ~10% lower at 12.0&nbsp;kPa, leaving ~40% margin against the 20&nbsp;kPa plate budget and confirming the section 6 note for the governing branch.
+          Energy balance closes to ~2%: ṁ&nbsp;=&nbsp;ρ·V̇&nbsp;=&nbsp;0.0235&nbsp;kg/s gives ΔT&nbsp;=&nbsp;700/(0.0235 × 3800)&nbsp;=&nbsp;7.8&nbsp;°C against the CFD ≈&nbsp;7.96&nbsp;°C. The laminar Darcy–Weisbach ΔP estimate (13.4&nbsp;kPa) at a single temperature and viscosity value is conservative. CFD lands ~10% lower at 12.0&nbsp;kPa, leaving ~40% margin against the 20&nbsp;kPa plate budget and confirming the section 6 note for the governing branch.
         </p>
       </div>
 
@@ -1143,14 +1168,13 @@ function GpuCfd(){
 
       <div className="callout g reveal" style={{marginTop:18}}>
         <span className="h">CFD verdict</span>
-        The GPU microchannel cold plate passes on all three axes: energy balance closes within 3%, ΔP comes in ~10% below the conservative laminar hand calc (12.0 vs 13.4&nbsp;kPa, 40% budget margin), and thermal resistance of 0.0281&nbsp;K/W stays under the 0.0387&nbsp;K/W budget. Because this plate governs flow, channel geometry, and loop ΔP, it is the narrowest in the design and the right place to watch on GPU-load operation.
+        The GPU microchannel cold plate passes on all three axes: energy balance closes to ~2%, ΔP comes in ~10% below the conservative laminar hand calc (12.0 vs 13.4&nbsp;kPa, 40% budget margin), and thermal resistance of 0.0281&nbsp;K/W stays under the 0.0387&nbsp;K/W budget. Because this plate governs flow, channel geometry, and loop ΔP, it is the narrowest in the design and the right place to watch on GPU-load operation.
       </div>
 	  <div className="callout o reveal" style={{marginTop:18}}>
         <span className="h">Assumptions & heat-source modeling</span>
         The 700&nbsp;W GPU load is applied uniformly over the 40×50&nbsp;mm microchannel cold-plate footprint (35&nbsp;W/cm² averaged flux). This is a bounding case for coolant-side sizing: flow rate, plate ΔP, and CDU duty are set by total heat, so the 140&nbsp;LPM design point, 50&nbsp;kPa rack budget, and Vertiv CoolChip CDU100kW selection are unaffected by how the heat is distributed on the die side. Two refinements are deferred:
-        <p style={{marginTop:6}}>1) <b>Die→IHS→Cold plate base.</b> The true stack is Die → TIM1 → IHS → TIM2 → Microchannel base (40×50&nbsp;mm). The current model under-predicts die hotspot temperature, and T<sub>j</sub> margin against the vendor limit must be re-evaluated once detailed geometry or powermap distribution is available for a CFD simulation.</p>
+        <p style={{marginTop:6}}>1) <b>Die→IHS→Cold plate base.</b> The true stack is Die → TIM1 → IHS → TIM2 → Microchannel base (40×50&nbsp;mm) as shown in section 3. The current model under-predicts die hotspot temperature, and T<sub>j</sub> margin against the vendor limit must be re-evaluated once detailed geometry or powermap distribution is available for a CFD simulation.</p>
         <p style={{marginTop:6}}>2) <b>Power partitioning.</b> A realistic 700&nbsp;W package splits roughly 500–600&nbsp;W on the compute die and 100–200&nbsp;W across HBM and VRMs, each with its own T<sub>j</sub> limit. A multi-zone heat source map is the right next step. A future scope of this study is to replace the uniform flat base of the cold plate with a stepped profile to match compute die, HBM, and VRM zones in FloEFD / FloTherm / Icepak.</p>
-        <p style={{marginTop:6}}>3) <b>Loss-of-flow / pump-trip transient (future scope).</b> A lumped-capacitance ride-through analysis of a hard loss-of-flow event, single GPU cold plate as the worst-case local failure is identified as future scope, together with the resulting flow/ΔP-triggered interlock requirement (power-cap command on flow loss, with pump-trip as the slower backstop).</p>
       </div>
     </Sec>
   );
@@ -1245,13 +1269,13 @@ function RackSim(){
   ];
   const cmp=[
     {k:'Node ΔP (supply→return)', t:'23.3 kPa', b:'16.9 kPa', s:'—'},
-    {k:'GPU plate flow (avg of 4)', t:'1.547 LPM', b:'1.313 LPM', s:'15.2%'},
-    {k:'CPU plate flow (avg of 2)', t:'0.843 LPM', b:'0.716 LPM', s:'15.1%'},
+    {k:'GPU plate flow rate (avg of 4)', t:'1.547 LPM', b:'1.313 LPM', s:'15.2%'},
+    {k:'CPU plate flow rate (avg of 2)', t:'0.843 LPM', b:'0.716 LPM', s:'15.1%'},
     {k:'Node total flow', t:'7.87 LPM', b:'6.68 LPM', s:'16.0%'},
   ];
   return (
     <Sec id="racksim" n="10" title="Rack-Level Hydraulic Network Simulation (Simulink)"
-      sub="The component hand-calcs are assembled into one Simscape Fluids network of all 20 nodes including headers, quick-disconnects, branches, cold plates, balancing orifice, and loop protection etc to confirm the total system ΔP and quantify the real top-to-bottom flow spread.">
+      sub="The component hand-calcs and CFD results are assembled into one Simscape Fluids network of all 20 nodes including headers, valves, quick-disconnects, branches, cold plates, and flow balancing orifices etc to confirm the total system ΔP and quantify top-to-bottom flow rate spread.">
       <div className="grid2">
         <div className="card reveal">
           <h3 style={{marginBottom:12}}><span className="dot"></span>Network model basis</h3>
@@ -1263,13 +1287,13 @@ function RackSim(){
           <h3 style={{marginBottom:12}}><span className="dot"></span>Assembled system result</h3>
           <div className="grid2" style={{gap:10}}>
             <div className="ministat"><div className="v">37.7 kPa</div><div className="k">Rack network ΔP @ 140 LPM</div></div>
-            <div className="ministat"><div className="v">140 LPM</div><div className="k">Total flow (driven)</div></div>
-            <div className="ministat"><div className="v">Top Node</div><div className="k">Min GPU flow = 1.29 LPM, Server Flow = 6.68 LPM</div></div>
-            <div className="ministat"><div className="v">Bottom Node</div><div className="k">max GPU flow = 1.59 LPM, Server Flow = 7.87 LPM</div></div>
+            <div className="ministat"><div className="v">140 LPM</div><div className="k">Total flow rate</div></div>
+            <div className="ministat"><div className="v">Top Node</div><div className="k">Min GPU flow rate = 1.29 LPM, Server Flow rate = 6.68 LPM</div></div>
+            <div className="ministat"><div className="v">Bottom Node</div><div className="k">max GPU flow rate = 1.59 LPM, Server Flow rate = 7.87 LPM</div></div>
           </div>
           <div className="callout g" style={{marginTop:14}}>
             <span className="h">Reconciles with the pump budget</span>
-            The simulated rack-side distribution + terminal network returns <b>37.7 kPa</b> at the design flow, ~75% of the conservative 50 kPa hand-calc budget, and it is this validated figure that sets the ~37.7 kPa CDU operating duty in the CDU hydraulic sizing section.
+            The rack-level simulation returned <b>37.7 kPa</b> at the design flowrate, ~75% of the conservative 50 kPa hand-calc budget, and it is this validated figure that sets the ~37.7 kPa CDU operating duty in the CDU hydraulic sizing section.
           </div>
         </div>
       </div>
@@ -1303,8 +1327,8 @@ function RackSim(){
         </table>
       </div>
       <div className="callout reveal" style={{marginTop:18}}>
-        <span className="h">Top-to-bottom flow spread ≈ 16% larger than the lumped header estimate</span>
-        A lumped header estimate predicts a near-uniform &le;2% node-to-node spread on the supply/return rails alone. The full network model resolves <b>~16%</b> once the cumulative reverse-return path asymmetry plus the per-node UQD06/GPL50 quick-disconnect and riser losses are stacked. All twenty nodes still hold per-plate flow above the minimum that keeps GPU and CPU junctions in budget, but the spread is real and worth carrying into the as-built balancing plan.
+        <span className="h">Top-to-bottom flow rate spread ≈ 16% larger than the lumped header estimate</span>
+        A lumped header estimate predicts a near-uniform &le;2% node-to-node spread on the supply/return rails alone. The full network model resolves <b>~16%</b> once the cumulative reverse-return path asymmetry plus the per-node UQD06/GPL50 quick-disconnect and riser losses are stacked. All twenty nodes still hold per-plate flow rate above the threshold that keeps GPU and CPU junctions in budget, but the spread is real and worth carrying into the as-built balancing plan.
       </div>
       <div className="card reveal" style={{marginTop:18}}>
         <h3 style={{marginBottom:6}}><span className="dot o"></span>CFD P–Q curves of cold-plates and orifice</h3>
@@ -1323,9 +1347,9 @@ function RackSim(){
         <ul style={{margin:'10px 0 10px 18px',padding:0}}>
           <li><b>Constant volumetric flow</b> (common in hyperscale AI loops: pump parasitic power is &lt;1% of IT load, so there is little incentive to throttle): the orifice sits permanently at its design point and the split never drifts. A fixed orifice is fully adequate.</li>
           <li><b>Constant manifold ΔP</b> (VFD pump modulated to hold supply–return Δp): node ΔP is held rigid, so the parallel CPU/GPU split stays locked at design regardless of total flow. A fixed orifice is again adequate.</li>
-          <li><b>ΔT-following / variable-ΔP turndown</b>: As ΔP falls with load, the quadratic orifice loses restriction faster than the linear plate, and the CPU branch runs rich while the GPU is starved of its proportional share. But this drift is self-limiting, flow falls because heat fell, so the GPU is starved precisely when it has minimal load to dissipate and ample thermal margin remains. The orifice is sized for the peak-load case, not idle.</li>
+          <li><b>ΔT-following / variable-ΔP turndown</b>: As ΔP falls with load, the quadratic orifice loses restriction faster than the linear plate, and the CPU branch runs rich while the GPU is starved of its proportional share. But this drift is self-limiting, flow rate falls because heat fell, so the GPU is starved precisely when it has minimal load to dissipate and ample thermal margin remains. The orifice is sized for the peak-load case, not idle.</li>
         </ul>
-        <b>Conclusion:</b> a fixed orifice sized at full thermal load is acceptable under constant-flow or constant-ΔP control.
+        <b>Conclusion:</b> a fixed orifice sized at full thermal load is acceptable under constant-flow rate or constant-ΔP control.
       </div>
     </Sec>
   );
@@ -1499,7 +1523,7 @@ function CpuCfd(){
             </tbody>
           </table>
           <p className="cap" style={{marginTop:12}}>
-            The analytical chain (R<sub>conv</sub>&nbsp;0.0329 + R<sub>spread</sub>&nbsp;0.0124 + R<sub>base</sub>&nbsp;0.0009) predicts 0.0462&nbsp;K/W, which implies a peak base temperature of T<sub>cool</sub>&nbsp;+&nbsp;Q·R&nbsp;=&nbsp;35&nbsp;+&nbsp;400&nbsp;×&nbsp;0.0462&nbsp;≈&nbsp;<b>53.5&nbsp;°C</b>. Fig.&nbsp;CP-3 gives T<sub>max</sub>&nbsp;=&nbsp;51.58&nbsp;°C, so R<sub>cp,CFD</sub>&nbsp;=&nbsp;(51.58−35)/400&nbsp;=&nbsp;<b>0.0415&nbsp;K/W</b>, ~10% below the 0.0462&nbsp;K/W analytical value. The hand calc is conservative and the resistance budget is confirmed.
+            The analytical chain (R<sub>conv</sub>&nbsp;0.0329 + R<sub>spread</sub>&nbsp;0.0124 + R<sub>base</sub>&nbsp;0.0009) predicts 0.0462&nbsp;K/W, which implies a peak base temperature of T<sub>cool</sub>&nbsp;+&nbsp;Q·R&nbsp;=&nbsp;35&nbsp;+&nbsp;400&nbsp;×&nbsp;0.0462&nbsp;≈&nbsp;<b>53.5&nbsp;°C</b>. Fig.&nbsp;CP-3 gives T<sub>max</sub>&nbsp;=&nbsp;51.58&nbsp;°C, so R<sub>cp,CFD</sub>&nbsp;=&nbsp;(51.58−35)/400&nbsp;=&nbsp;<b>0.0415&nbsp;K/W</b>, ~10% below the analytical value.
           </p>
         </div>
       </div>
@@ -1565,7 +1589,7 @@ function PumpChart(){
         <text key={'ty'+y} x={px(0)-8} y={py(y)+3.5} fontSize="10.5" fill={textColor} textAnchor="end">{y}</text>
       ))}
       {/* axis labels */}
-      <text x={(px(0)+px(xMax))/2} y={H-10} fontSize="11.5" fill={textColor} textAnchor="middle" fontWeight="600">Rack flow Q (LPM)</text>
+      <text x={(px(0)+px(xMax))/2} y={H-10} fontSize="11.5" fill={textColor} textAnchor="middle" fontWeight="600">Rack flow rate Q (LPM)</text>
       <text fontSize="11.5" fill={textColor} textAnchor="middle" fontWeight="600"
             transform={`translate(16,${(py(0)+py(yMax))/2}) rotate(-90)`}>ΔP (kPa)</text>
 
@@ -1645,10 +1669,10 @@ function Pump(){
       </div>
 
       <div className="card reveal" style={{marginTop:16}}>
-        <h3 style={{marginBottom:8}}><span className="dot"></span>Pump curve vs system impedance (digitized from Vertiv Fig 4.5)</h3>
+        <h3 style={{marginBottom:8}}><span className="dot"></span>Pump curve vs system impedance (digitized from CDU datasheet)</h3>
         <PumpChart/>
         <p className="cap" style={{marginTop:10}}>
-          The <b>2× CDU @ 65%</b> curve (dotted) intersects the system impedance curve at the operating point <b>(140 LPM, 37.7 kPa)</b>, that's how the VSD speed setpoint is derived. The <b>2× CDU @ 100%</b> envelope (dashed) sits well above, leaving deep turndown room. A single CDU at 100% intersects the system curve at <b>~136 LPM / 35.5 kPa</b> i.e. a lone unit cannot quite hold the 140 LPM design flow (~3% hydraulic shortfall) but easily covers the 90 kW thermal load alone, which is why this architecture qualifies as <b>2N</b> at the CDU level.
+          The <b>2× CDU @ 65%</b> curve (dotted) intersects the system impedance curve at the operating point <b>(140 LPM, 37.7 kPa)</b>, that's how the VSD speed setpoint is derived. The <b>2× CDU @ 100%</b> envelope (dashed) sits well above, leaving deep turndown room. A single CDU at 100% intersects the system curve at <b>~136 LPM / 35.5 kPa</b> i.e. a lone unit cannot quite hold the 140 LPM design flow rate (~3% hydraulic shortfall) but easily covers the 90 kW thermal load alone, which is why this architecture qualifies as <b>2N</b> at the CDU level.
         </p>
       </div>
 
@@ -1776,7 +1800,7 @@ function Summary(){
     {v:'0.0415',k:'CPU Cold Plate, Rth (K/W)',s:'vs 0.088 budget',o:false},
     {v:'76.4 °C',k:'CPU Junction, T',s:'18.6 K margin (CFD)',o:false},
     {v:'0.0281',k:'GPU Cold Plate, Rth (K/W)',s:'vs 0.0387 budget',o:true},
-    {v:'87.6 °C',k:'GPU Junction, T',s:'7.4 K margin (CFD, uniform-flux)',o:true},
+    {v:'87.6 °C',k:'GPU Junction, T',s:'7.4 K margin (CFD)',o:true},
     {v:'≥90 kW',k:'CDU capacity',s:'~10% over design',o:false},
     {v:'37.7 kPa',k:'System Impedance',s:'@ 140 LPM',o:false},
 	{v:'12.0 kPa',k:'GPU plate ΔP (governs)',s:'vs 20 kPa budget',o:true},
