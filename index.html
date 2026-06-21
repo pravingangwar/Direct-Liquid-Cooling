@@ -790,7 +790,6 @@ function ThermalPathFigure(){
   const GR   = '#9aa7b2';
   const SUB  = '#e7ebef';
   const SUBE = '#5f7180';
-  const PCBF = '#dff0e6';
   const PCBE = '#2f8a5e';
   const INK  = '#1d2b3a';
   const MUT  = '#5f7180';
@@ -842,20 +841,26 @@ function ThermalPathFigure(){
         <text x={240} y={35} textAnchor="middle" fontFamily={SANS} fontSize="13"
               fontWeight="700" fill={INK}>Physical stack (cross-section)</text>
 
-        {/* coolant ports - explicit small arrows (not marker-scaled) */}
-        <text x={188} y={52} textAnchor="middle" fontFamily={MONO} fontSize="11" fill={CY}>35 C in</text>
-        <text x={292} y={52} textAnchor="middle" fontFamily={MONO} fontSize="11" fill={CY}>45 C out</text>
-        {/* inlet: down into the cold plate */}
-        <line x1={188} y1={58} x2={188} y2={89} stroke={CY} strokeWidth="3"/>
-        <path d="M182,88 L194,88 L188,98 Z" fill={CY}/>
-        {/* outlet: up out of the cold plate */}
-        <line x1={292} y1={98} x2={292} y2={67} stroke={CY} strokeWidth="3"/>
-        <path d="M286,68 L298,68 L292,58 Z" fill={CY}/>
+        {/* coolant ports - small inlet/outlet nozzles on the cold plate */}
+        <text x={188} y={48} textAnchor="middle" fontFamily={MONO} fontSize="11" fill={CY}>35 C in</text>
+        <text x={292} y={48} textAnchor="middle" fontFamily={MONO} fontSize="11" fill={CY}>45 C out</text>
+        {/* inlet nozzle stub + flow arrow down into it */}
+        <line x1={188} y1={56} x2={188} y2={78} stroke={CY} strokeWidth="3"/>
+        <path d="M182,78 L194,78 L188,88 Z" fill={CY}/>
+        <rect x={181} y={88} width={14} height={14} rx="2" fill={CU} stroke={CUE} strokeWidth="1.2"/>
+        {/* outlet nozzle stub + flow arrow up out of it */}
+        <rect x={285} y={88} width={14} height={14} rx="2" fill={CU} stroke={CUE} strokeWidth="1.2"/>
+        <line x1={292} y1={88} x2={292} y2={66} stroke={CY} strokeWidth="3"/>
+        <path d="M286,66 L298,66 L292,56 Z" fill={CY}/>
 
         {/* layers (block x 150..330) */}
-        <rect x={150} y={100} width={180} height={62} rx="4" fill={CYL} stroke={CUE} strokeWidth="1.4"/>
-        {[0,1,2,3,4,5,6,7,8].map(i=>(
-          <line key={i} x1={166+i*18} y1={108} x2={166+i*18} y2={154} stroke={CY} strokeWidth="2" opacity="0.5"/>
+        {/* cold plate: copper body with thicker base and side walls */}
+        <rect x={150} y={100} width={180} height={62} rx="4" fill={CU} stroke={CUE} strokeWidth="1.4"/>
+        {/* coolant cavity inside the copper walls */}
+        <rect x={156} y={108} width={168} height={48} rx="2" fill={CYL}/>
+        {/* copper microchannel fins extending to the base */}
+        {Array.from({length:18}).map((_,i)=>(
+          <line key={i} x1={164+i*9} y1={108} x2={164+i*9} y2={156} stroke={CUE} strokeWidth="2"/>
         ))}
         <rect x={150} y={162} width={180} height={11} fill={GR}/>
         <rect x={150} y={173} width={180} height={41} fill={CU} stroke={CUE} strokeWidth="1.2"/>
@@ -866,7 +871,15 @@ function ThermalPathFigure(){
         {[0,1,2,3,4,5,6].map(i=>(
           <circle key={i} cx={168+i*24} cy={298} r="8" fill={SUBE}/>
         ))}
-        <rect x={150} y={306} width={180} height={50} rx="3" fill={PCBF} stroke={PCBE} strokeWidth="1.5"/>
+        <rect x={150} y={306} width={180} height={50} rx="3" fill={PCBE} stroke={PCBE} strokeWidth="1.5"/>
+        {/* PCB internal copper planes (thinner, extended to the edges) */}
+        {[312,323,334,345].map((yy,i)=>(
+          <rect key={i} x={150} y={yy} width={180} height={1.5} fill={CUE}/>
+        ))}
+        {/* plated thermal vias (thicker, extended to the edges) linking the planes */}
+        {[186,222,258,294].map((xx,i)=>(
+          <line key={i} x1={xx} y1={306} x2={xx} y2={356} stroke={CUE} strokeWidth="4"/>
+        ))}
 
         {/* die heat label */}
         <text x={240} y={246} textAnchor="middle" fontFamily={MONO} fontSize="12"
@@ -881,7 +894,7 @@ function ThermalPathFigure(){
           ['Die / junction','',241],
           ['Substrate','',274],
           ['BGA','',298],
-          ['PCB','',331],
+          ['PCB','(Cu planes + vias)',331],
         ].map(([a,b,y],i)=>(
           <g key={i}>
             <text x={142} y={y-(b?4:0)} textAnchor="end" fontFamily={SANS} fontSize="12.5"
